@@ -1,4 +1,4 @@
-const cacheName = "fieldforce-ai-v2";
+const cacheName = "fieldforce-ai-v3";
 const filesToCache = [
   "./",
   "./index.html",

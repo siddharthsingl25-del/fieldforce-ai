@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#168765" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=cloud-2" />
   </head>
   <body>
     <div class="app-shell">
@@ -220,6 +220,7 @@
             <div>
               <p class="eyebrow">Master data</p>
               <h2>Customer Master</h2>
+              <p id="customerSyncStatus">Loading cloud customers...</p>
             </div>
             <button class="primary-action" data-refresh-master="customers">Refresh Data</button>
           </div>
@@ -252,6 +253,7 @@
             <div>
               <p class="eyebrow">Product catalog</p>
               <h2>Product Master</h2>
+              <p id="productSyncStatus">Loading cloud products...</p>
             </div>
             <button class="primary-action" data-refresh-master="products">Refresh Data</button>
           </div>
@@ -381,6 +383,6 @@
       </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=cloud-2"></script>
   </body>
 </html>

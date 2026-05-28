@@ -67,15 +67,36 @@ function cloudHeaders() {
   };
 }
 
+function requestJson(url, options = {}) {
+  if (typeof fetch === "function") {
+    return fetch(url, options).then(async (response) => {
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(options.method || "GET", url);
+    Object.entries(options.headers || {}).forEach(([key, value]) => xhr.setRequestHeader(key, value));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
+      } else {
+        reject(new Error(xhr.responseText || `Request failed: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network request failed"));
+    xhr.send(options.body || null);
+  });
+}
+
 async function cloudSelect(table) {
   if (!cloudEnabled) return null;
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
+  return requestJson(`${supabaseUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
     headers: cloudHeaders()
   });
-
-  if (!response.ok) throw new Error(`Cloud select failed: ${table}`);
-  return response.json();
 }
 
 function money(value) {
@@ -200,14 +221,23 @@ function renderAdminProducts(products) {
 
 async function renderMasterData() {
   const state = loadMobileState();
+  const customerStatus = document.getElementById("customerSyncStatus");
+  const productStatus = document.getElementById("productSyncStatus");
+
+  if (customerStatus) customerStatus.textContent = "Refreshing cloud data...";
+  if (productStatus) productStatus.textContent = "Refreshing cloud data...";
 
   try {
     const [customers, products] = await Promise.all([cloudSelect("customers"), cloudSelect("products")]);
     renderAdminCustomers(customers || []);
     renderAdminProducts(products || []);
+    if (customerStatus) customerStatus.textContent = `Cloud synced: ${(customers || []).length} customers`;
+    if (productStatus) productStatus.textContent = `Cloud synced: ${(products || []).length} products`;
   } catch {
     renderAdminCustomers(state.customers || []);
     renderAdminProducts(state.products || []);
+    if (customerStatus) customerStatus.textContent = "Cloud refresh failed. Showing local browser data.";
+    if (productStatus) productStatus.textContent = "Cloud refresh failed. Showing local browser data.";
   }
 }
 
