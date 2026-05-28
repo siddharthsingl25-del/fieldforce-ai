@@ -1,6 +1,8 @@
 const viewTitles = {
   command: "Manager Command Center",
   field: "Mobile Field App",
+  customers: "Customer Master",
+  products: "Product Master",
   visits: "Visit Management",
   sales: "Sales & Order Management",
   schemes: "Scheme Management",
@@ -8,6 +10,8 @@ const viewTitles = {
   gamify: "Gamification System",
   ai: "AI Sales Copilot"
 };
+
+const storageKey = "fieldforce-mobile-demo";
 
 const visits = [
   ["Dr. Mehta Clinic", "Doctor", "Completed", "Productive", "Follow up in 7 days"],
@@ -35,6 +39,29 @@ function switchView(viewId) {
   });
 
   document.getElementById("view-title").textContent = viewTitles[viewId];
+
+  if (viewId === "customers" || viewId === "products") {
+    renderMasterData();
+  }
+}
+
+function loadMobileState() {
+  const saved = localStorage.getItem(storageKey);
+  if (!saved) return { customers: [], products: [] };
+
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return { customers: [], products: [] };
+  }
+}
+
+function money(value) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0
+  }).format(Number(value || 0));
 }
 
 function renderVisits() {
@@ -72,9 +99,97 @@ function renderProducts() {
     .join("");
 }
 
+function renderAdminCustomers(customers) {
+  const rows = document.getElementById("adminCustomerRows");
+  if (!rows) return;
+
+  const doctorTotal = customers.filter((customer) => customer.type === "Doctor").length;
+  const retailerTotal = customers.filter((customer) => customer.type === "Retailer").length;
+  const outstandingTotal = customers.reduce((sum, customer) => sum + Number(customer.outstanding || 0), 0);
+
+  document.getElementById("adminCustomerTotal").textContent = customers.length;
+  document.getElementById("adminDoctorTotal").textContent = doctorTotal;
+  document.getElementById("adminRetailerTotal").textContent = retailerTotal;
+  document.getElementById("adminOutstandingTotal").textContent = money(outstandingTotal);
+
+  rows.innerHTML = customers.length
+    ? customers
+        .slice()
+        .reverse()
+        .map((customer) => {
+          return `
+            <tr>
+              <td><strong>${customer.name || "-"}</strong></td>
+              <td>${customer.type || "-"}</td>
+              <td>${customer.area || "-"}</td>
+              <td>${customer.customerClass || "-"}</td>
+              <td>${customer.specialty || "-"}</td>
+              <td>${customer.mobile || "-"}</td>
+              <td>${money(customer.outstanding)}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `
+      <tr>
+        <td colspan="7"><strong>No customer data yet.</strong> Add customers from the mobile app, then refresh this page.</td>
+      </tr>
+    `;
+}
+
+function renderAdminProducts(products) {
+  const rows = document.getElementById("adminProductRows");
+  if (!rows) return;
+
+  const stockTotal = products.reduce((sum, product) => sum + Number(product.stock || 0), 0);
+  const avgMrp = products.length ? products.reduce((sum, product) => sum + Number(product.mrp || 0), 0) / products.length : 0;
+  const schemeTotal = products.filter((product) => product.scheme).length;
+
+  document.getElementById("adminProductTotal").textContent = products.length;
+  document.getElementById("adminStockTotal").textContent = stockTotal;
+  document.getElementById("adminAvgMrp").textContent = money(avgMrp);
+  document.getElementById("adminSchemeTotal").textContent = schemeTotal;
+
+  rows.innerHTML = products.length
+    ? products
+        .slice()
+        .reverse()
+        .map((product) => {
+          return `
+            <tr>
+              <td><strong>${product.name || "-"}</strong></td>
+              <td>${product.composition || "-"}</td>
+              <td>${product.category || "-"}</td>
+              <td>${product.pack || "-"}</td>
+              <td>${money(product.mrp)}</td>
+              <td>${money(product.saleRate)}</td>
+              <td>${product.scheme || "-"}</td>
+              <td>${product.stock || 0}</td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `
+      <tr>
+        <td colspan="8"><strong>No product data yet.</strong> Add products from the mobile app, then refresh this page.</td>
+      </tr>
+    `;
+}
+
+function renderMasterData() {
+  const state = loadMobileState();
+  renderAdminCustomers(state.customers || []);
+  renderAdminProducts(state.products || []);
+}
+
 document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
 });
 
+document.querySelectorAll("[data-refresh-master]").forEach((button) => {
+  button.addEventListener("click", renderMasterData);
+});
+
 renderVisits();
 renderProducts();
+renderMasterData();

@@ -23,6 +23,8 @@
         <nav class="nav-list">
           <button class="nav-item active" data-view="command">Command</button>
           <button class="nav-item" data-view="field">Field App</button>
+          <button class="nav-item" data-view="customers">Customers</button>
+          <button class="nav-item" data-view="products">Products</button>
           <button class="nav-item" data-view="visits">Visits</button>
           <button class="nav-item" data-view="sales">Sales</button>
           <button class="nav-item" data-view="schemes">Schemes</button>
@@ -209,6 +211,71 @@
                 </tr>
               </thead>
               <tbody id="visitRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="customers">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Master data</p>
+              <h2>Customer Master</h2>
+            </div>
+            <button class="primary-action" data-refresh-master="customers">Refresh Data</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Total Customers</span><strong id="adminCustomerTotal">0</strong><small>Saved from mobile app</small></article>
+            <article class="metric"><span>Doctors</span><strong id="adminDoctorTotal">0</strong><small>Specialty customers</small></article>
+            <article class="metric"><span>Retailers</span><strong id="adminRetailerTotal">0</strong><small>Trade outlets</small></article>
+            <article class="metric"><span>Outstanding</span><strong id="adminOutstandingTotal">₹0</strong><small>Local saved value</small></article>
+          </div>
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Area</th>
+                  <th>Class</th>
+                  <th>Specialty / Channel</th>
+                  <th>Mobile</th>
+                  <th>Outstanding</th>
+                </tr>
+              </thead>
+              <tbody id="adminCustomerRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="products">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Product catalog</p>
+              <h2>Product Master</h2>
+            </div>
+            <button class="primary-action" data-refresh-master="products">Refresh Data</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Total Products</span><strong id="adminProductTotal">0</strong><small>Saved from mobile app</small></article>
+            <article class="metric"><span>Total Stock</span><strong id="adminStockTotal">0</strong><small>Local stock count</small></article>
+            <article class="metric"><span>Avg MRP</span><strong id="adminAvgMrp">₹0</strong><small>Across products</small></article>
+            <article class="metric"><span>Active Schemes</span><strong id="adminSchemeTotal">0</strong><small>Products with scheme</small></article>
+          </div>
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Composition</th>
+                  <th>Category</th>
+                  <th>Pack</th>
+                  <th>MRP</th>
+                  <th>Sale Rate</th>
+                  <th>Scheme</th>
+                  <th>Stock</th>
+                </tr>
+              </thead>
+              <tbody id="adminProductRows"></tbody>
             </table>
           </div>
         </section>
