@@ -67,6 +67,17 @@
             <button>Collect ₹18,500 from Shiv Medicos</button>
           </div>
         </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Master Data</h2>
+            <span>Setup</span>
+          </div>
+          <div class="action-list">
+            <button data-jump-view="m-customers">Add customer / doctor / retailer</button>
+            <button data-jump-view="m-products">Add product with MRP, sale rate, scheme</button>
+          </div>
+        </section>
       </section>
 
       <section class="mobile-view" id="m-beat">
@@ -153,6 +164,122 @@
         </section>
       </section>
 
+      <section class="mobile-view" id="m-customers">
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Customer Master</h2>
+            <span id="customerCount">0 saved</span>
+          </div>
+          <div class="form-grid">
+            <label>
+              Customer Type
+              <select id="customerType">
+                <option>Doctor</option>
+                <option>Retailer</option>
+                <option>Distributor</option>
+                <option>Stockist</option>
+                <option>Hospital</option>
+                <option>FMCG Outlet</option>
+              </select>
+            </label>
+            <label>
+              Name
+              <input id="customerName" placeholder="e.g. Dr. Mehta Clinic" />
+            </label>
+            <label>
+              Mobile
+              <input id="customerMobile" inputmode="tel" placeholder="e.g. 9876543210" />
+            </label>
+            <label>
+              Area / Beat
+              <input id="customerArea" placeholder="e.g. Jaipur East" />
+            </label>
+            <label>
+              Category / Class
+              <select id="customerClass">
+                <option>A-Class</option>
+                <option>B-Class</option>
+                <option>C-Class</option>
+                <option>New Lead</option>
+              </select>
+            </label>
+            <label>
+              Specialty / Channel
+              <input id="customerSpecialty" placeholder="e.g. Cardiologist / General Trade" />
+            </label>
+            <label>
+              Outstanding
+              <input id="customerOutstanding" type="number" min="0" value="0" />
+            </label>
+            <label>
+              Address
+              <textarea id="customerAddress" placeholder="Add address or landmark..."></textarea>
+            </label>
+          </div>
+          <button class="submit-button" id="saveCustomerButton">Save Customer</button>
+        </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Saved Customers</h2>
+            <span>Local</span>
+          </div>
+          <div class="master-list" id="customerList"></div>
+        </section>
+      </section>
+
+      <section class="mobile-view" id="m-products">
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Product Master</h2>
+            <span id="productCount">0 saved</span>
+          </div>
+          <div class="form-grid">
+            <label>
+              Product Name
+              <input id="productName" placeholder="e.g. CardioMax 10mg" />
+            </label>
+            <label>
+              Composition
+              <input id="productComposition" placeholder="e.g. Atorvastatin 10mg" />
+            </label>
+            <label>
+              Category
+              <input id="productCategory" placeholder="e.g. Cardiac / Wellness / FMCG" />
+            </label>
+            <label>
+              Pack Size
+              <input id="productPack" placeholder="e.g. 10x10 tablets" />
+            </label>
+            <label>
+              MRP
+              <input id="productMrp" type="number" min="0" value="0" />
+            </label>
+            <label>
+              Sale Rate
+              <input id="productSaleRate" type="number" min="0" value="0" />
+            </label>
+            <label>
+              Scheme
+              <input id="productScheme" placeholder="e.g. Buy 10 get 2 free" />
+            </label>
+            <label>
+              Stock
+              <input id="productStock" type="number" min="0" value="0" />
+            </label>
+          </div>
+          <button class="submit-button" id="saveProductButton">Save Product</button>
+        </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Saved Products</h2>
+            <span>Local</span>
+          </div>
+          <div class="master-list" id="productList"></div>
+        </section>
+      </section>
+
       <section class="mobile-view" id="m-rewards">
         <section class="reward-card">
           <span>Level 12</span>
@@ -184,6 +311,8 @@
         <button class="active" data-mobile-view="m-home">Home</button>
         <button data-mobile-view="m-beat">Beat</button>
         <button data-mobile-view="m-visit">Visit</button>
+        <button data-mobile-view="m-customers">Customers</button>
+        <button data-mobile-view="m-products">Products</button>
         <button data-mobile-view="m-order">Order</button>
         <button data-mobile-view="m-rewards">Rewards</button>
         <button data-mobile-view="m-ai">AI</button>

@@ -4,6 +4,8 @@ const mobileTitles = {
   "m-home": "Today",
   "m-beat": "Beat Plan",
   "m-visit": "Visit",
+  "m-customers": "Customers",
+  "m-products": "Products",
   "m-order": "Order",
   "m-rewards": "Rewards",
   "m-ai": "AI Assistant"
@@ -15,7 +17,9 @@ const defaultState = {
   role: "MR",
   checkedIn: false,
   visits: [],
-  orders: []
+  orders: [],
+  customers: [],
+  products: []
 };
 
 function loadState() {
@@ -34,7 +38,11 @@ function money(value) {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0
-  }).format(value);
+  }).format(Number(value || 0));
+}
+
+function currentTime() {
+  return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 
 function showMobileView(viewId) {
@@ -81,6 +89,50 @@ function renderHistory() {
     : `<div class="history-item"><strong>No activity saved yet</strong><span>Submit a visit or book an order.</span></div>`;
 }
 
+function renderCustomers() {
+  const customerList = document.getElementById("customerList");
+  document.getElementById("customerCount").textContent = `${state.customers.length} saved`;
+
+  customerList.innerHTML = state.customers.length
+    ? state.customers
+        .slice()
+        .reverse()
+        .map((customer) => {
+          return `
+            <div class="master-item">
+              <strong>${customer.name}</strong>
+              <span>${customer.type} | ${customer.customerClass} | ${customer.area || "No area"}</span>
+              <span>${customer.specialty || "No specialty"} | Mobile: ${customer.mobile || "-"}</span>
+              <span>Outstanding: ${money(customer.outstanding)}</span>
+            </div>
+          `;
+        })
+        .join("")
+    : `<div class="master-item"><strong>No customers added</strong><span>Add doctors, retailers, distributors, stockists, or FMCG outlets.</span></div>`;
+}
+
+function renderProducts() {
+  const productList = document.getElementById("productList");
+  document.getElementById("productCount").textContent = `${state.products.length} saved`;
+
+  productList.innerHTML = state.products.length
+    ? state.products
+        .slice()
+        .reverse()
+        .map((product) => {
+          return `
+            <div class="master-item">
+              <strong>${product.name}</strong>
+              <span>${product.composition || "No composition"} | ${product.category || "No category"}</span>
+              <span>MRP: ${money(product.mrp)} | Sale: ${money(product.saleRate)} | Stock: ${product.stock}</span>
+              <span>Scheme: ${product.scheme || "No scheme"}</span>
+            </div>
+          `;
+        })
+        .join("")
+    : `<div class="master-item"><strong>No products added</strong><span>Add product name, composition, MRP, sale rate, scheme, and stock.</span></div>`;
+}
+
 function calculateOrderTotal() {
   return [...document.querySelectorAll(".qty-input")].reduce((sum, input) => {
     return sum + Number(input.value || 0) * Number(input.dataset.price || 0);
@@ -103,8 +155,32 @@ function toast(message) {
   setTimeout(() => item.remove(), 2200);
 }
 
+function clearCustomerForm() {
+  document.getElementById("customerName").value = "";
+  document.getElementById("customerMobile").value = "";
+  document.getElementById("customerArea").value = "";
+  document.getElementById("customerSpecialty").value = "";
+  document.getElementById("customerOutstanding").value = "0";
+  document.getElementById("customerAddress").value = "";
+}
+
+function clearProductForm() {
+  document.getElementById("productName").value = "";
+  document.getElementById("productComposition").value = "";
+  document.getElementById("productCategory").value = "";
+  document.getElementById("productPack").value = "";
+  document.getElementById("productMrp").value = "0";
+  document.getElementById("productSaleRate").value = "0";
+  document.getElementById("productScheme").value = "";
+  document.getElementById("productStock").value = "0";
+}
+
 document.querySelectorAll(".bottom-nav button").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.mobileView));
+});
+
+document.querySelectorAll("[data-jump-view]").forEach((button) => {
+  button.addEventListener("click", () => showMobileView(button.dataset.jumpView));
 });
 
 document.getElementById("loginButton").addEventListener("click", () => {
@@ -128,7 +204,7 @@ document.getElementById("submitVisitButton").addEventListener("click", () => {
     customer: "Shiv Medicos",
     outcome: document.getElementById("visitOutcome").value,
     notes: document.getElementById("visitNotes").value.trim(),
-    time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    time: currentTime()
   });
   saveState();
   renderHistory();
@@ -139,11 +215,61 @@ document.getElementById("bookOrderButton").addEventListener("click", () => {
   state.orders.push({
     customer: "Shiv Medicos",
     total: calculateOrderTotal(),
-    time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    time: currentTime()
   });
   saveState();
   renderHistory();
   toast("Order booked locally");
+});
+
+document.getElementById("saveCustomerButton").addEventListener("click", () => {
+  const name = document.getElementById("customerName").value.trim();
+  if (!name) {
+    toast("Customer name required");
+    return;
+  }
+
+  state.customers.push({
+    type: document.getElementById("customerType").value,
+    name,
+    mobile: document.getElementById("customerMobile").value.trim(),
+    area: document.getElementById("customerArea").value.trim(),
+    customerClass: document.getElementById("customerClass").value,
+    specialty: document.getElementById("customerSpecialty").value.trim(),
+    outstanding: Number(document.getElementById("customerOutstanding").value || 0),
+    address: document.getElementById("customerAddress").value.trim(),
+    createdAt: currentTime()
+  });
+
+  saveState();
+  renderCustomers();
+  clearCustomerForm();
+  toast("Customer saved");
+});
+
+document.getElementById("saveProductButton").addEventListener("click", () => {
+  const name = document.getElementById("productName").value.trim();
+  if (!name) {
+    toast("Product name required");
+    return;
+  }
+
+  state.products.push({
+    name,
+    composition: document.getElementById("productComposition").value.trim(),
+    category: document.getElementById("productCategory").value.trim(),
+    pack: document.getElementById("productPack").value.trim(),
+    mrp: Number(document.getElementById("productMrp").value || 0),
+    saleRate: Number(document.getElementById("productSaleRate").value || 0),
+    scheme: document.getElementById("productScheme").value.trim(),
+    stock: Number(document.getElementById("productStock").value || 0),
+    createdAt: currentTime()
+  });
+
+  saveState();
+  renderProducts();
+  clearProductForm();
+  toast("Product saved");
 });
 
 document.querySelectorAll(".qty-input").forEach((input) => {
@@ -153,6 +279,8 @@ document.querySelectorAll(".qty-input").forEach((input) => {
 renderUser();
 renderCheckIn();
 renderHistory();
+renderCustomers();
+renderProducts();
 renderOrderTotal();
 
 if ("serviceWorker" in navigator) {
