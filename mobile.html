@@ -70,6 +70,14 @@
 
         <section class="mobile-panel">
           <div class="panel-title">
+            <h2>Announcements</h2>
+            <span id="announcementCount">0 new</span>
+          </div>
+          <div class="master-list" id="mobileAnnouncementList"></div>
+        </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
             <h2>Master Data</h2>
             <span>Setup</span>
           </div>
@@ -154,6 +162,18 @@
             <textarea id="visitNotes" placeholder="Add visit notes...">Discussed VitaPlus combo scheme and refill requirement.</textarea>
           </label>
           <button class="submit-button" id="submitVisitButton">Submit Visit</button>
+        </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Retail Audit</h2>
+            <span>FMCG</span>
+          </div>
+          <label>Shelf Share %<input id="retailShelfShare" type="number" min="0" max="100" value="0" /></label>
+          <label>Competitor Brand<input id="retailCompetitor" placeholder="Competitor / market intelligence" /></label>
+          <label>Stock Status<select id="retailStockStatus"><option>Available</option><option>Low Stock</option><option>Stockout</option><option>Overstock</option></select></label>
+          <label>Merchandising Notes<textarea id="retailAuditNotes" placeholder="Shelf display, photo note, competitor activity..."></textarea></label>
+          <button class="submit-button" id="submitRetailAuditButton">Submit Retail Audit</button>
         </section>
 
         <section class="mobile-panel">
@@ -280,6 +300,13 @@
           </div>
           <input id="mobileProductSearch" placeholder="Search products / composition..." />
           <div class="master-list" id="productList"></div>
+        </section>
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Promotions & Training</h2>
+            <span id="promotionCount">0 active</span>
+          </div>
+          <div class="master-list" id="mobilePromotionList"></div>
         </section>
       </section>
 

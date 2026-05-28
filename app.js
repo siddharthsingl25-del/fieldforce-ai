@@ -9,6 +9,10 @@ const viewTitles = {
   visits: "Visit Management",
   sales: "Sales & Order Management",
   reports: "Reports",
+  targets: "Targets & Achievements",
+  promotions: "Product Promotions",
+  audit: "FMCG Retail Audit",
+  comms: "Communication Center",
   schemes: "Scheme Management",
   incentives: "Incentive Engine",
   gamify: "Gamification System",
@@ -26,6 +30,10 @@ const contextActions = {
   visits: { label: "Refresh Visits", action: renderCloudVisits },
   sales: { label: "Refresh Sales", action: renderCloudSales },
   reports: { label: "Refresh Reports", action: renderReports },
+  targets: { label: "Create Target", target: "targetUser" },
+  promotions: { label: "Create Promotion", target: "promoTitle" },
+  audit: { label: "Create Audit", target: "auditCustomer" },
+  comms: { label: "Publish", target: "announceTitle" },
   field: { label: "Open Mobile", action: () => window.open("/mobile", "_blank") },
   incentives: { label: "Coming Next", action: () => adminToast("Incentive builder is next batch") },
   gamify: { label: "Coming Next", action: () => adminToast("Gamification rules are next batch") },
@@ -143,6 +151,22 @@ function switchView(viewId) {
 
   if (viewId === "reports") {
     renderReports();
+  }
+
+  if (viewId === "targets") {
+    renderTargets();
+  }
+
+  if (viewId === "promotions") {
+    renderPromotions();
+  }
+
+  if (viewId === "audit") {
+    renderAudits();
+  }
+
+  if (viewId === "comms") {
+    renderAnnouncements();
   }
 
   if (viewId === "command") {
@@ -692,6 +716,63 @@ function renderDiscountRows() {
     : `<div class="master-item"><strong>No discount assigned</strong><span>Assign scheme/discount level for testing.</span></div>`;
 }
 
+function renderTargets() {
+  const list = document.getElementById("adminTargetRows");
+  const status = document.getElementById("targetSyncStatus");
+  if (!list) return;
+  if (status) status.textContent = "Refreshing targets...";
+  optionalCloudSelect("targets").then((items) => {
+    if (status) status.textContent = `Cloud synced: ${items.length} targets`;
+    list.innerHTML = items.length
+      ? items.map((item) => {
+          const target = Number(item.target_value || 0);
+          const achieved = Number(item.achieved_value || 0);
+          const percent = target ? Math.round((achieved / target) * 100) : 0;
+          return `<div class="master-item"><strong>${item.user_name || "Team"} - ${percent}%</strong><span>${item.target_type || "Target"} | ${item.product || "All products"} | ${item.territory || "All territories"}</span><span>${money(achieved)} / ${money(target)} | ${item.period || "-"}</span></div>`;
+        }).join("")
+      : `<div class="master-item"><strong>No targets yet</strong><span>Create monthly, product-wise, territory, collection, or visit targets.</span></div>`;
+  });
+}
+
+function renderPromotions() {
+  const list = document.getElementById("adminPromotionRows");
+  const status = document.getElementById("promotionSyncStatus");
+  if (!list) return;
+  if (status) status.textContent = "Refreshing promotions...";
+  optionalCloudSelect("promotions").then((items) => {
+    if (status) status.textContent = `Cloud synced: ${items.length} promotions`;
+    list.innerHTML = items.length
+      ? items.map((item) => `<div class="master-item"><strong>${item.title}</strong><span>${item.campaign_type || "Campaign"} | ${item.product || "All products"} | ${item.status || "Active"}</span><span>${item.notes || item.content_url || "-"}</span></div>`).join("")
+      : `<div class="master-item"><strong>No promotion library yet</strong><span>Add focus products, new launches, visual aids, PDFs, or videos.</span></div>`;
+  });
+}
+
+function renderAudits() {
+  const list = document.getElementById("adminAuditRows");
+  const status = document.getElementById("auditSyncStatus");
+  if (!list) return;
+  if (status) status.textContent = "Refreshing retail audits...";
+  optionalCloudSelect("retail_audits").then((items) => {
+    if (status) status.textContent = `Cloud synced: ${items.length} audit entries`;
+    list.innerHTML = items.length
+      ? items.map((item) => `<div class="master-item"><strong>${item.customer}</strong><span>${item.user_name || "-"} | Shelf share ${item.shelf_share || 0}% | ${item.stock_status || "-"}</span><span>Competitor: ${item.competitor || "-"} | ${item.merchandising_notes || "-"}</span></div>`).join("")
+      : `<div class="master-item"><strong>No FMCG audits yet</strong><span>Capture shelf share, competitor, stockout, and merchandising notes.</span></div>`;
+  });
+}
+
+function renderAnnouncements() {
+  const list = document.getElementById("adminAnnouncementRows");
+  const status = document.getElementById("commsSyncStatus");
+  if (!list) return;
+  if (status) status.textContent = "Refreshing communication...";
+  optionalCloudSelect("announcements").then((items) => {
+    if (status) status.textContent = `Cloud synced: ${items.length} announcements`;
+    list.innerHTML = items.length
+      ? items.map((item) => `<div class="master-item"><strong>${item.title}</strong><span>${item.audience || "All"} | ${item.priority || "Normal"} | ${item.status || "Published"}</span><span>${item.message || "-"}</span></div>`).join("")
+      : `<div class="master-item"><strong>No announcements yet</strong><span>Publish circulars, training modules, team notices, and approvals.</span></div>`;
+  });
+}
+
 function renderReports() {
   const status = document.getElementById("reportSyncStatus");
   if (status) status.textContent = "Refreshing cloud reports...";
@@ -782,6 +863,10 @@ document.querySelectorAll("[data-refresh-ops]").forEach((button) => {
     if (button.dataset.refreshOps === "tasks") renderTasks();
     if (button.dataset.refreshOps === "territories") renderTerritories();
     if (button.dataset.refreshOps === "reports") renderReports();
+    if (button.dataset.refreshOps === "targets") renderTargets();
+    if (button.dataset.refreshOps === "promotions") renderPromotions();
+    if (button.dataset.refreshOps === "audit") renderAudits();
+    if (button.dataset.refreshOps === "comms") renderAnnouncements();
   });
 });
 
@@ -839,6 +924,90 @@ document.getElementById("adminTransferArea")?.addEventListener("click", async ()
     adminToast("Area transfer saved");
   } catch {
     adminToast("Transfer failed. Run latest SQL if needed.");
+  }
+});
+
+document.getElementById("adminSaveTarget")?.addEventListener("click", async () => {
+  try {
+    await cloudInsert("targets", {
+      user_name: valueOf("targetUser"),
+      role: "Field",
+      target_type: valueOf("targetType"),
+      product: valueOf("targetProduct"),
+      territory: valueOf("targetTerritory"),
+      target_value: numberValue("targetValue"),
+      achieved_value: numberValue("targetAchieved"),
+      period: valueOf("targetPeriod")
+    });
+    ["targetUser", "targetProduct", "targetTerritory", "targetPeriod"].forEach((id) => setValue(id));
+    ["targetValue", "targetAchieved"].forEach((id) => setValue(id, "0"));
+    renderTargets();
+    adminToast("Target saved");
+  } catch {
+    adminToast("Target save failed. Run latest SQL.");
+  }
+});
+
+document.getElementById("adminSavePromotion")?.addEventListener("click", async () => {
+  const title = valueOf("promoTitle");
+  if (!title) return adminToast("Promotion title required");
+
+  try {
+    await cloudInsert("promotions", {
+      title,
+      product: valueOf("promoProduct"),
+      campaign_type: valueOf("promoType"),
+      content_url: valueOf("promoUrl"),
+      notes: valueOf("promoNotes"),
+      status: "Active"
+    });
+    ["promoTitle", "promoProduct", "promoUrl", "promoNotes"].forEach((id) => setValue(id));
+    renderPromotions();
+    adminToast("Promotion saved");
+  } catch {
+    adminToast("Promotion save failed. Run latest SQL.");
+  }
+});
+
+document.getElementById("adminSaveAudit")?.addEventListener("click", async () => {
+  const customer = valueOf("auditCustomer");
+  if (!customer) return adminToast("Outlet required");
+
+  try {
+    await cloudInsert("retail_audits", {
+      user_name: valueOf("auditUser"),
+      customer,
+      shelf_share: numberValue("auditShelfShare"),
+      competitor: valueOf("auditCompetitor"),
+      stock_status: valueOf("auditStockStatus"),
+      merchandising_notes: valueOf("auditNotes")
+    });
+    ["auditUser", "auditCustomer", "auditCompetitor", "auditNotes"].forEach((id) => setValue(id));
+    setValue("auditShelfShare", "0");
+    renderAudits();
+    adminToast("Audit saved");
+  } catch {
+    adminToast("Audit save failed. Run latest SQL.");
+  }
+});
+
+document.getElementById("adminSaveAnnouncement")?.addEventListener("click", async () => {
+  const title = valueOf("announceTitle");
+  if (!title) return adminToast("Announcement title required");
+
+  try {
+    await cloudInsert("announcements", {
+      title,
+      message: valueOf("announceMessage"),
+      audience: valueOf("announceAudience"),
+      priority: valueOf("announcePriority"),
+      status: "Published"
+    });
+    ["announceTitle", "announceMessage"].forEach((id) => setValue(id));
+    renderAnnouncements();
+    adminToast("Announcement published");
+  } catch {
+    adminToast("Announcement failed. Run latest SQL.");
   }
 });
 
@@ -990,4 +1159,8 @@ renderTerritories();
 renderSchemes();
 renderReportDirectory();
 renderDiscountRows();
+renderTargets();
+renderPromotions();
+renderAudits();
+renderAnnouncements();
 renderReports();

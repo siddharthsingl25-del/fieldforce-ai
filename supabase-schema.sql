@@ -120,6 +120,73 @@ create table if not exists public.territories (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.targets (
+  id uuid primary key default gen_random_uuid(),
+  user_name text,
+  role text,
+  target_type text default 'Monthly Sales',
+  product text,
+  territory text,
+  target_value numeric default 0,
+  achieved_value numeric default 0,
+  period text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.promotions (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  product text,
+  campaign_type text default 'Focus Product',
+  content_url text,
+  notes text,
+  status text default 'Active',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.retail_audits (
+  id uuid primary key default gen_random_uuid(),
+  user_name text,
+  customer text not null,
+  shelf_share numeric default 0,
+  competitor text,
+  stock_status text,
+  merchandising_notes text,
+  image_note text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  message text,
+  audience text default 'All Field Users',
+  priority text default 'Normal',
+  status text default 'Published',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.expenses (
+  id uuid primary key default gen_random_uuid(),
+  user_name text,
+  expense_type text,
+  amount numeric default 0,
+  notes text,
+  status text default 'Submitted',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.collections (
+  id uuid primary key default gen_random_uuid(),
+  user_name text,
+  customer text not null,
+  amount numeric default 0,
+  mode text default 'Cash',
+  invoice_no text,
+  status text default 'Collected',
+  created_at timestamptz not null default now()
+);
+
 alter table public.customers enable row level security;
 alter table public.products enable row level security;
 alter table public.visits enable row level security;
@@ -130,6 +197,12 @@ alter table public.beat_plans enable row level security;
 alter table public.tasks enable row level security;
 alter table public.schemes enable row level security;
 alter table public.territories enable row level security;
+alter table public.targets enable row level security;
+alter table public.promotions enable row level security;
+alter table public.retail_audits enable row level security;
+alter table public.announcements enable row level security;
+alter table public.expenses enable row level security;
+alter table public.collections enable row level security;
 
 drop policy if exists "testing read customers" on public.customers;
 drop policy if exists "testing insert customers" on public.customers;
@@ -153,6 +226,18 @@ drop policy if exists "testing read schemes" on public.schemes;
 drop policy if exists "testing insert schemes" on public.schemes;
 drop policy if exists "testing read territories" on public.territories;
 drop policy if exists "testing insert territories" on public.territories;
+drop policy if exists "testing read targets" on public.targets;
+drop policy if exists "testing insert targets" on public.targets;
+drop policy if exists "testing read promotions" on public.promotions;
+drop policy if exists "testing insert promotions" on public.promotions;
+drop policy if exists "testing read retail audits" on public.retail_audits;
+drop policy if exists "testing insert retail audits" on public.retail_audits;
+drop policy if exists "testing read announcements" on public.announcements;
+drop policy if exists "testing insert announcements" on public.announcements;
+drop policy if exists "testing read expenses" on public.expenses;
+drop policy if exists "testing insert expenses" on public.expenses;
+drop policy if exists "testing read collections" on public.collections;
+drop policy if exists "testing insert collections" on public.collections;
 
 create policy "testing read customers" on public.customers for select to anon using (true);
 create policy "testing insert customers" on public.customers for insert to anon with check (true);
@@ -185,3 +270,21 @@ create policy "testing insert schemes" on public.schemes for insert to anon with
 
 create policy "testing read territories" on public.territories for select to anon using (true);
 create policy "testing insert territories" on public.territories for insert to anon with check (true);
+
+create policy "testing read targets" on public.targets for select to anon using (true);
+create policy "testing insert targets" on public.targets for insert to anon with check (true);
+
+create policy "testing read promotions" on public.promotions for select to anon using (true);
+create policy "testing insert promotions" on public.promotions for insert to anon with check (true);
+
+create policy "testing read retail audits" on public.retail_audits for select to anon using (true);
+create policy "testing insert retail audits" on public.retail_audits for insert to anon with check (true);
+
+create policy "testing read announcements" on public.announcements for select to anon using (true);
+create policy "testing insert announcements" on public.announcements for insert to anon with check (true);
+
+create policy "testing read expenses" on public.expenses for select to anon using (true);
+create policy "testing insert expenses" on public.expenses for insert to anon with check (true);
+
+create policy "testing read collections" on public.collections for select to anon using (true);
+create policy "testing insert collections" on public.collections for insert to anon with check (true);

@@ -23,7 +23,9 @@ const defaultState = {
   orders: [],
   customers: [],
   products: [],
-  outletSessions: []
+  outletSessions: [],
+  promotions: [],
+  announcements: []
 };
 
 function loadState() {
@@ -326,6 +328,28 @@ function renderSchemes(schemes = []) {
     : `<div class="master-item"><strong>No active schemes</strong><span>Product schemes will appear here.</span></div>`;
 }
 
+function renderPromotions(promotions = state.promotions || []) {
+  const list = document.getElementById("mobilePromotionList");
+  const count = document.getElementById("promotionCount");
+  if (!list || !count) return;
+
+  count.textContent = `${promotions.length} active`;
+  list.innerHTML = promotions.length
+    ? promotions.map((item) => `<div class="master-item"><strong>${item.title}</strong><span>${item.campaign_type || "Campaign"} | ${item.product || "All products"}</span><span>${item.notes || item.content_url || "Open content from admin link"}</span></div>`).join("")
+    : `<div class="master-item"><strong>No campaign yet</strong><span>Focus products, training, PDFs, and videos will appear here.</span></div>`;
+}
+
+function renderAnnouncements(announcements = state.announcements || []) {
+  const list = document.getElementById("mobileAnnouncementList");
+  const count = document.getElementById("announcementCount");
+  if (!list || !count) return;
+
+  count.textContent = `${announcements.length} new`;
+  list.innerHTML = announcements.length
+    ? announcements.slice(0, 4).map((item) => `<div class="master-item"><strong>${item.title}</strong><span>${item.priority || "Normal"} | ${item.audience || "All users"}</span><span>${item.message || "-"}</span></div>`).join("")
+    : `<div class="master-item"><strong>No announcement</strong><span>Admin circulars and training messages will appear here.</span></div>`;
+}
+
 function calculateOrderTotal() {
   return [...document.querySelectorAll(".qty-input")].reduce((sum, input) => {
     return sum + Number(input.value || 0) * Number(input.dataset.price || 0);
@@ -368,10 +392,12 @@ async function syncFromCloud() {
       cloudSelect("orders"),
       optionalCloudSelect("outlet_sessions")
     ]);
-    const [beatPlans, tasks, schemes] = await Promise.all([
+    const [beatPlans, tasks, schemes, promotions, announcements] = await Promise.all([
       cloudSelect("beat_plans"),
       cloudSelect("tasks"),
-      cloudSelect("schemes")
+      cloudSelect("schemes"),
+      optionalCloudSelect("promotions"),
+      optionalCloudSelect("announcements")
     ]);
 
     state.customers = customers.map((customer) => ({
@@ -404,6 +430,8 @@ async function syncFromCloud() {
       notes: session.notes
     }));
 
+    state.promotions = promotions || [];
+    state.announcements = announcements || [];
     saveState();
     renderHistory();
     renderOutletStats();
@@ -414,6 +442,8 @@ async function syncFromCloud() {
     renderBeatPlans(beatPlans || []);
     renderTasks(tasks || []);
     renderSchemes(schemes || []);
+    renderPromotions(state.promotions);
+    renderAnnouncements(state.announcements);
   } catch (error) {
     toast("Cloud setup pending. Using local save.");
   }
@@ -545,6 +575,28 @@ document.getElementById("submitVisitButton").addEventListener("click", async () 
   }
 });
 
+document.getElementById("submitRetailAuditButton")?.addEventListener("click", async () => {
+  const customer = document.getElementById("visitCustomerSelect")?.value || "Shiv Medicos";
+  const audit = {
+    user_name: state.name,
+    customer,
+    shelf_share: Number(document.getElementById("retailShelfShare")?.value || 0),
+    competitor: document.getElementById("retailCompetitor")?.value.trim() || "",
+    stock_status: document.getElementById("retailStockStatus")?.value || "Available",
+    merchandising_notes: document.getElementById("retailAuditNotes")?.value.trim() || ""
+  };
+
+  try {
+    await cloudInsert("retail_audits", audit);
+    document.getElementById("retailShelfShare").value = "0";
+    document.getElementById("retailCompetitor").value = "";
+    document.getElementById("retailAuditNotes").value = "";
+    toast("Retail audit saved to cloud");
+  } catch {
+    toast("Retail audit saved locally");
+  }
+});
+
 document.getElementById("bookOrderButton").addEventListener("click", async () => {
   const order = {
     customer: document.getElementById("orderCustomerSelect")?.value || "Shiv Medicos",
@@ -636,6 +688,8 @@ renderOrderProducts();
 renderBeatPlans();
 renderTasks();
 renderSchemes();
+renderPromotions();
+renderAnnouncements();
 renderOrderTotal();
 syncFromCloud();
 

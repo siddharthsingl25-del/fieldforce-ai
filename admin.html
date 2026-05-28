@@ -31,6 +31,10 @@
           <button class="nav-item" data-view="visits">Visits</button>
           <button class="nav-item" data-view="sales">Sales</button>
           <button class="nav-item" data-view="reports">Reports</button>
+          <button class="nav-item" data-view="targets">Targets</button>
+          <button class="nav-item" data-view="promotions">Promotions</button>
+          <button class="nav-item" data-view="audit">FMCG Audit</button>
+          <button class="nav-item" data-view="comms">Comms</button>
           <button class="nav-item" data-view="schemes">Schemes</button>
           <button class="nav-item" data-view="incentives">Incentives</button>
           <button class="nav-item" data-view="gamify">Gamify</button>
@@ -633,6 +637,96 @@
               <div class="master-list" id="adminDiscountRows"></div>
             </section>
           </div>
+        </section>
+
+        <section class="view" id="targets">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Targets & achievements</p>
+              <h2>Target Builder</h2>
+              <p id="targetSyncStatus">Monthly, product-wise, team-wise, and territory targets.</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="targets">Refresh Targets</button>
+          </div>
+          <section class="panel">
+            <div class="builder-stack compact-form">
+              <label>User / Team<input id="targetUser" placeholder="MR / ASM / Team name" /></label>
+              <label>Type<select id="targetType"><option>Monthly Sales</option><option>Product-wise</option><option>Visit Coverage</option><option>Collection</option><option>New Customer</option></select></label>
+              <label>Product<input id="targetProduct" placeholder="Optional product" /></label>
+              <label>Territory<input id="targetTerritory" placeholder="State / area / beat" /></label>
+              <label>Target Value<input id="targetValue" type="number" min="0" value="0" /></label>
+              <label>Achieved<input id="targetAchieved" type="number" min="0" value="0" /></label>
+              <label>Period<input id="targetPeriod" placeholder="May 2026" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveTarget">Save Target</button>
+          </section>
+          <section class="panel"><h2>Achievement Tracker</h2><div class="master-list" id="adminTargetRows"></div></section>
+        </section>
+
+        <section class="view" id="promotions">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Product promotion</p>
+              <h2>Campaigns, Training & Visual Aids</h2>
+              <p id="promotionSyncStatus">Focus products, launches, PDFs, videos, and push content.</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="promotions">Refresh Promotions</button>
+          </div>
+          <section class="panel">
+            <div class="builder-stack compact-form">
+              <label>Title<input id="promoTitle" placeholder="New launch / campaign title" /></label>
+              <label>Product<input id="promoProduct" placeholder="Product name" /></label>
+              <label>Type<select id="promoType"><option>Focus Product</option><option>New Launch</option><option>Training</option><option>Visual Aid</option><option>Video</option><option>PDF</option></select></label>
+              <label>Content URL<input id="promoUrl" placeholder="PDF/video/link" /></label>
+              <label>Notes<input id="promoNotes" placeholder="Campaign note for field users" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSavePromotion">Save Promotion</button>
+          </section>
+          <section class="panel"><h2>Active Promotion Library</h2><div class="master-list" id="adminPromotionRows"></div></section>
+        </section>
+
+        <section class="view" id="audit">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">FMCG operations</p>
+              <h2>Retail Audit & Market Intelligence</h2>
+              <p id="auditSyncStatus">Shelf share, competitor tracking, merchandising, retail stock, and outlet classification.</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="audit">Refresh Audits</button>
+          </div>
+          <section class="panel">
+            <div class="builder-stack compact-form">
+              <label>User<input id="auditUser" placeholder="Field user" /></label>
+              <label>Outlet<input id="auditCustomer" placeholder="Retailer / outlet" /></label>
+              <label>Shelf Share %<input id="auditShelfShare" type="number" min="0" max="100" value="0" /></label>
+              <label>Competitor<input id="auditCompetitor" placeholder="Competitor brand" /></label>
+              <label>Stock Status<select id="auditStockStatus"><option>Available</option><option>Low Stock</option><option>Stockout</option><option>Overstock</option></select></label>
+              <label>Merchandising Notes<input id="auditNotes" placeholder="Display, photo note, market feedback" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveAudit">Save Audit</button>
+          </section>
+          <section class="panel"><h2>Audit Feed</h2><div class="master-list" id="adminAuditRows"></div></section>
+        </section>
+
+        <section class="view" id="comms">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Communication</p>
+              <h2>Announcements, Tasks & Approvals</h2>
+              <p id="commsSyncStatus">Circulars, team announcements, training messages, and approval workflow base.</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="comms">Refresh Comms</button>
+          </div>
+          <section class="panel">
+            <div class="builder-stack compact-form">
+              <label>Title<input id="announceTitle" placeholder="Announcement title" /></label>
+              <label>Audience<select id="announceAudience"><option>All Field Users</option><option>MR</option><option>ASM</option><option>RM</option><option>Distributors</option></select></label>
+              <label>Priority<select id="announcePriority"><option>Normal</option><option>High</option><option>Urgent</option></select></label>
+              <label>Message<input id="announceMessage" placeholder="Circular / training / task message" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveAnnouncement">Publish Announcement</button>
+          </section>
+          <section class="panel"><h2>Published Communication</h2><div class="master-list" id="adminAnnouncementRows"></div></section>
         </section>
 
         <section class="view" id="incentives">
