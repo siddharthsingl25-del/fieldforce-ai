@@ -198,7 +198,11 @@ function renderProducts() {
   const products = query
     ? state.products.filter((product) => [product.name, product.composition, product.category, product.pack, product.scheme, product.mrp, product.saleRate, product.sale_rate].join(" ").toLowerCase().includes(query))
     : state.products;
-  document.getElementById("productCount").textContent = `${state.products.length} saved`;
+  const stockTotal = state.products.reduce((sum, product) => sum + Number(product.stock || 0), 0);
+  const schemeTotal = state.products.filter((product) => product.scheme).length;
+  document.getElementById("productCount").textContent = `${state.products.length} products`;
+  document.getElementById("mobileProductStock").textContent = stockTotal;
+  document.getElementById("mobileProductSchemes").textContent = schemeTotal;
 
   productList.innerHTML = products.length
     ? products
@@ -215,7 +219,7 @@ function renderProducts() {
           `;
         })
         .join("")
-    : `<div class="master-item"><strong>No products added</strong><span>Add product name, composition, MRP, sale rate, scheme, and stock.</span></div>`;
+    : `<div class="master-item"><strong>No products synced yet</strong><span>Admin can create products from the web panel. Then refresh mobile.</span></div>`;
 }
 
 function renderCustomerDropdowns() {
@@ -266,7 +270,7 @@ function renderOrderProducts() {
           `;
         })
         .join("")
-    : `<div class="master-item"><strong>No product found</strong><span>Add product in Product Master.</span></div>`;
+    : `<div class="master-item"><strong>No product found</strong><span>Ask admin to add this product in Product Master.</span></div>`;
 
   document.querySelectorAll(".qty-input").forEach((input) => {
     input.addEventListener("input", renderOrderTotal);
@@ -351,17 +355,6 @@ function clearCustomerForm() {
   document.getElementById("customerSpecialty").value = "";
   document.getElementById("customerOutstanding").value = "0";
   document.getElementById("customerAddress").value = "";
-}
-
-function clearProductForm() {
-  document.getElementById("productName").value = "";
-  document.getElementById("productComposition").value = "";
-  document.getElementById("productCategory").value = "";
-  document.getElementById("productPack").value = "";
-  document.getElementById("productMrp").value = "0";
-  document.getElementById("productSaleRate").value = "0";
-  document.getElementById("productScheme").value = "";
-  document.getElementById("productStock").value = "0";
 }
 
 async function syncFromCloud() {
@@ -617,49 +610,6 @@ document.getElementById("saveCustomerButton").addEventListener("click", async ()
     toast("Customer saved to cloud");
   } catch {
     toast("Customer saved locally");
-  }
-});
-
-document.getElementById("saveProductButton").addEventListener("click", async () => {
-  const name = document.getElementById("productName").value.trim();
-  if (!name) {
-    toast("Product name required");
-    return;
-  }
-
-  const product = {
-    name,
-    composition: document.getElementById("productComposition").value.trim(),
-    category: document.getElementById("productCategory").value.trim(),
-    pack: document.getElementById("productPack").value.trim(),
-    mrp: Number(document.getElementById("productMrp").value || 0),
-    saleRate: Number(document.getElementById("productSaleRate").value || 0),
-    scheme: document.getElementById("productScheme").value.trim(),
-    stock: Number(document.getElementById("productStock").value || 0),
-    createdAt: currentTime()
-  };
-
-  state.products.push(product);
-  saveState();
-  renderProducts();
-  clearProductForm();
-
-  try {
-    await cloudInsert("products", {
-      name: product.name,
-      composition: product.composition,
-      category: product.category,
-      pack: product.pack,
-      mrp: product.mrp,
-      sale_rate: product.saleRate,
-      scheme: product.scheme,
-      stock: product.stock,
-      created_by: state.name
-    });
-    await syncFromCloud();
-    toast("Product saved to cloud");
-  } catch {
-    toast("Product saved locally");
   }
 });
 

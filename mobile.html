@@ -75,7 +75,7 @@
           </div>
           <div class="action-list">
             <button data-jump-view="m-customers">Add customer / doctor / retailer</button>
-            <button data-jump-view="m-products">Add product with MRP, sale rate, scheme</button>
+            <button data-jump-view="m-products">View product details, schemes, and stock</button>
           </div>
         </section>
       </section>
@@ -263,50 +263,20 @@
       <section class="mobile-view" id="m-products">
         <section class="mobile-panel">
           <div class="panel-title">
-            <h2>Product Master</h2>
-            <span id="productCount">0 saved</span>
+            <h2>Product Details</h2>
+            <span id="productCount">0 products</span>
           </div>
-          <div class="form-grid">
-            <label>
-              Product Name
-              <input id="productName" placeholder="e.g. CardioMax 10mg" />
-            </label>
-            <label>
-              Composition
-              <input id="productComposition" placeholder="e.g. Atorvastatin 10mg" />
-            </label>
-            <label>
-              Category
-              <input id="productCategory" placeholder="e.g. Cardiac / Wellness / FMCG" />
-            </label>
-            <label>
-              Pack Size
-              <input id="productPack" placeholder="e.g. 10x10 tablets" />
-            </label>
-            <label>
-              MRP
-              <input id="productMrp" type="number" min="0" value="0" />
-            </label>
-            <label>
-              Sale Rate
-              <input id="productSaleRate" type="number" min="0" value="0" />
-            </label>
-            <label>
-              Scheme
-              <input id="productScheme" placeholder="e.g. Buy 10 get 2 free" />
-            </label>
-            <label>
-              Stock
-              <input id="productStock" type="number" min="0" value="0" />
-            </label>
+          <div class="status-grid">
+            <div><span>Total Stock</span><strong id="mobileProductStock">0</strong></div>
+            <div><span>Active Schemes</span><strong id="mobileProductSchemes">0</strong></div>
           </div>
-          <button class="submit-button" id="saveProductButton">Save Product</button>
+          <p>Products are managed from admin panel. Field users can view composition, MRP, sale rate, stock, schemes, and book orders.</p>
         </section>
 
         <section class="mobile-panel">
           <div class="panel-title">
-            <h2>Saved Products</h2>
-            <span>Local</span>
+            <h2>Product Catalog</h2>
+            <span>Cloud synced</span>
           </div>
           <input id="mobileProductSearch" placeholder="Search products / composition..." />
           <div class="master-list" id="productList"></div>
