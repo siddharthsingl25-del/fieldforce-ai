@@ -50,6 +50,12 @@ After GitHub and Vercel are connected once, use:
 
 This commits changes to GitHub. Vercel will auto-deploy from GitHub.
 
+## Supabase cloud setup
+
+Run `supabase-schema.sql` in Supabase SQL Editor before testing cloud save.
+
+The prototype currently uses Supabase public anon access for testing. Before a large rollout, replace this with authenticated users and stricter row-level security policies.
+
 ## Next development steps
 
 1. Convert this prototype into a Next.js admin panel.

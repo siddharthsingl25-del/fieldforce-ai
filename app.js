@@ -12,6 +12,9 @@ const viewTitles = {
 };
 
 const storageKey = "fieldforce-mobile-demo";
+const supabaseUrl = "https://uywrkixlytrcepuextiq.supabase.co";
+const supabaseKey = "sb_publishable_Mu7SoauvKLHuka9L5ZamVQ_8SJHs_1y";
+const cloudEnabled = Boolean(supabaseUrl && supabaseKey);
 
 const visits = [
   ["Dr. Mehta Clinic", "Doctor", "Completed", "Productive", "Follow up in 7 days"],
@@ -54,6 +57,25 @@ function loadMobileState() {
   } catch {
     return { customers: [], products: [] };
   }
+}
+
+function cloudHeaders() {
+  return {
+    apikey: supabaseKey,
+    Authorization: `Bearer ${supabaseKey}`,
+    "Content-Type": "application/json"
+  };
+}
+
+async function cloudSelect(table) {
+  if (!cloudEnabled) return null;
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
+    headers: cloudHeaders()
+  });
+
+  if (!response.ok) throw new Error(`Cloud select failed: ${table}`);
+  return response.json();
 }
 
 function money(value) {
@@ -122,7 +144,7 @@ function renderAdminCustomers(customers) {
               <td><strong>${customer.name || "-"}</strong></td>
               <td>${customer.type || "-"}</td>
               <td>${customer.area || "-"}</td>
-              <td>${customer.customerClass || "-"}</td>
+              <td>${customer.customerClass || customer.customer_class || "-"}</td>
               <td>${customer.specialty || "-"}</td>
               <td>${customer.mobile || "-"}</td>
               <td>${money(customer.outstanding)}</td>
@@ -162,7 +184,7 @@ function renderAdminProducts(products) {
               <td>${product.category || "-"}</td>
               <td>${product.pack || "-"}</td>
               <td>${money(product.mrp)}</td>
-              <td>${money(product.saleRate)}</td>
+              <td>${money(product.saleRate || product.sale_rate)}</td>
               <td>${product.scheme || "-"}</td>
               <td>${product.stock || 0}</td>
             </tr>
@@ -176,10 +198,17 @@ function renderAdminProducts(products) {
     `;
 }
 
-function renderMasterData() {
+async function renderMasterData() {
   const state = loadMobileState();
-  renderAdminCustomers(state.customers || []);
-  renderAdminProducts(state.products || []);
+
+  try {
+    const [customers, products] = await Promise.all([cloudSelect("customers"), cloudSelect("products")]);
+    renderAdminCustomers(customers || []);
+    renderAdminProducts(products || []);
+  } catch {
+    renderAdminCustomers(state.customers || []);
+    renderAdminProducts(state.products || []);
+  }
 }
 
 document.querySelectorAll(".nav-item").forEach((button) => {

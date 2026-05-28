@@ -1,4 +1,7 @@
 const storageKey = "fieldforce-mobile-demo";
+const supabaseUrl = "https://uywrkixlytrcepuextiq.supabase.co";
+const supabaseKey = "sb_publishable_Mu7SoauvKLHuka9L5ZamVQ_8SJHs_1y";
+const cloudEnabled = Boolean(supabaseUrl && supabaseKey);
 
 const mobileTitles = {
   "m-home": "Today",
@@ -32,6 +35,39 @@ function saveState() {
 }
 
 let state = loadState();
+
+function cloudHeaders(extra = {}) {
+  return {
+    apikey: supabaseKey,
+    Authorization: `Bearer ${supabaseKey}`,
+    "Content-Type": "application/json",
+    ...extra
+  };
+}
+
+async function cloudSelect(table) {
+  if (!cloudEnabled) return null;
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
+    headers: cloudHeaders()
+  });
+
+  if (!response.ok) throw new Error(`Cloud select failed: ${table}`);
+  return response.json();
+}
+
+async function cloudInsert(table, payload) {
+  if (!cloudEnabled) return null;
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
+    method: "POST",
+    headers: cloudHeaders({ Prefer: "return=representation" }),
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) throw new Error(`Cloud insert failed: ${table}`);
+  return response.json();
+}
 
 function money(value) {
   return new Intl.NumberFormat("en-IN", {
@@ -101,7 +137,7 @@ function renderCustomers() {
           return `
             <div class="master-item">
               <strong>${customer.name}</strong>
-              <span>${customer.type} | ${customer.customerClass} | ${customer.area || "No area"}</span>
+              <span>${customer.type} | ${customer.customerClass || customer.customer_class || "-"} | ${customer.area || "No area"}</span>
               <span>${customer.specialty || "No specialty"} | Mobile: ${customer.mobile || "-"}</span>
               <span>Outstanding: ${money(customer.outstanding)}</span>
             </div>
@@ -124,7 +160,7 @@ function renderProducts() {
             <div class="master-item">
               <strong>${product.name}</strong>
               <span>${product.composition || "No composition"} | ${product.category || "No category"}</span>
-              <span>MRP: ${money(product.mrp)} | Sale: ${money(product.saleRate)} | Stock: ${product.stock}</span>
+              <span>MRP: ${money(product.mrp)} | Sale: ${money(product.saleRate || product.sale_rate)} | Stock: ${product.stock}</span>
               <span>Scheme: ${product.scheme || "No scheme"}</span>
             </div>
           `;
@@ -175,6 +211,46 @@ function clearProductForm() {
   document.getElementById("productStock").value = "0";
 }
 
+async function syncFromCloud() {
+  if (!cloudEnabled) return;
+
+  try {
+    const [customers, products, visits, orders] = await Promise.all([
+      cloudSelect("customers"),
+      cloudSelect("products"),
+      cloudSelect("visits"),
+      cloudSelect("orders")
+    ]);
+
+    state.customers = customers.map((customer) => ({
+      ...customer,
+      customerClass: customer.customer_class
+    }));
+    state.products = products.map((product) => ({
+      ...product,
+      saleRate: product.sale_rate
+    }));
+    state.visits = visits.map((visit) => ({
+      customer: visit.customer,
+      outcome: visit.outcome,
+      notes: visit.notes,
+      time: visit.visit_time || new Date(visit.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    }));
+    state.orders = orders.map((order) => ({
+      customer: order.customer,
+      total: order.total,
+      time: order.order_time || new Date(order.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    }));
+
+    saveState();
+    renderHistory();
+    renderCustomers();
+    renderProducts();
+  } catch (error) {
+    toast("Cloud setup pending. Using local save.");
+  }
+}
+
 document.querySelectorAll(".bottom-nav button").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.mobileView));
 });
@@ -199,37 +275,66 @@ document.getElementById("checkButton").addEventListener("click", () => {
   toast(state.checkedIn ? "Attendance checked in" : "Checked out");
 });
 
-document.getElementById("submitVisitButton").addEventListener("click", () => {
-  state.visits.push({
+document.getElementById("submitVisitButton").addEventListener("click", async () => {
+  const visit = {
     customer: "Shiv Medicos",
     outcome: document.getElementById("visitOutcome").value,
     notes: document.getElementById("visitNotes").value.trim(),
     time: currentTime()
-  });
+  };
+
+  state.visits.push(visit);
   saveState();
   renderHistory();
-  toast("Visit report saved");
+
+  try {
+    await cloudInsert("visits", {
+      customer: visit.customer,
+      outcome: visit.outcome,
+      notes: visit.notes,
+      user_name: state.name,
+      role: state.role,
+      visit_time: visit.time
+    });
+    toast("Visit saved to cloud");
+  } catch {
+    toast("Visit saved locally");
+  }
 });
 
-document.getElementById("bookOrderButton").addEventListener("click", () => {
-  state.orders.push({
+document.getElementById("bookOrderButton").addEventListener("click", async () => {
+  const order = {
     customer: "Shiv Medicos",
     total: calculateOrderTotal(),
     time: currentTime()
-  });
+  };
+
+  state.orders.push(order);
   saveState();
   renderHistory();
-  toast("Order booked locally");
+
+  try {
+    await cloudInsert("orders", {
+      customer: order.customer,
+      total: order.total,
+      user_name: state.name,
+      role: state.role,
+      order_time: order.time
+    });
+    toast("Order booked to cloud");
+  } catch {
+    toast("Order saved locally");
+  }
 });
 
-document.getElementById("saveCustomerButton").addEventListener("click", () => {
+document.getElementById("saveCustomerButton").addEventListener("click", async () => {
   const name = document.getElementById("customerName").value.trim();
   if (!name) {
     toast("Customer name required");
     return;
   }
 
-  state.customers.push({
+  const customer = {
     type: document.getElementById("customerType").value,
     name,
     mobile: document.getElementById("customerMobile").value.trim(),
@@ -239,22 +344,40 @@ document.getElementById("saveCustomerButton").addEventListener("click", () => {
     outstanding: Number(document.getElementById("customerOutstanding").value || 0),
     address: document.getElementById("customerAddress").value.trim(),
     createdAt: currentTime()
-  });
+  };
 
+  state.customers.push(customer);
   saveState();
   renderCustomers();
   clearCustomerForm();
-  toast("Customer saved");
+
+  try {
+    await cloudInsert("customers", {
+      type: customer.type,
+      name: customer.name,
+      mobile: customer.mobile,
+      area: customer.area,
+      customer_class: customer.customerClass,
+      specialty: customer.specialty,
+      outstanding: customer.outstanding,
+      address: customer.address,
+      created_by: state.name
+    });
+    await syncFromCloud();
+    toast("Customer saved to cloud");
+  } catch {
+    toast("Customer saved locally");
+  }
 });
 
-document.getElementById("saveProductButton").addEventListener("click", () => {
+document.getElementById("saveProductButton").addEventListener("click", async () => {
   const name = document.getElementById("productName").value.trim();
   if (!name) {
     toast("Product name required");
     return;
   }
 
-  state.products.push({
+  const product = {
     name,
     composition: document.getElementById("productComposition").value.trim(),
     category: document.getElementById("productCategory").value.trim(),
@@ -264,12 +387,30 @@ document.getElementById("saveProductButton").addEventListener("click", () => {
     scheme: document.getElementById("productScheme").value.trim(),
     stock: Number(document.getElementById("productStock").value || 0),
     createdAt: currentTime()
-  });
+  };
 
+  state.products.push(product);
   saveState();
   renderProducts();
   clearProductForm();
-  toast("Product saved");
+
+  try {
+    await cloudInsert("products", {
+      name: product.name,
+      composition: product.composition,
+      category: product.category,
+      pack: product.pack,
+      mrp: product.mrp,
+      sale_rate: product.saleRate,
+      scheme: product.scheme,
+      stock: product.stock,
+      created_by: state.name
+    });
+    await syncFromCloud();
+    toast("Product saved to cloud");
+  } catch {
+    toast("Product saved locally");
+  }
 });
 
 document.querySelectorAll(".qty-input").forEach((input) => {
@@ -282,6 +423,7 @@ renderHistory();
 renderCustomers();
 renderProducts();
 renderOrderTotal();
+syncFromCloud();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
