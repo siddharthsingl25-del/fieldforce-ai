@@ -169,6 +169,54 @@ function renderProducts() {
     : `<div class="master-item"><strong>No products added</strong><span>Add product name, composition, MRP, sale rate, scheme, and stock.</span></div>`;
 }
 
+function renderBeatPlans(plans = []) {
+  const list = document.getElementById("cloudBeatList");
+  const count = document.getElementById("beatPlanCount");
+  const summary = document.getElementById("beatSummary");
+  if (!list || !count) return;
+
+  count.textContent = `${plans.length} cloud`;
+  summary.textContent = plans.length
+    ? `${plans.length} planned stops | ${new Set(plans.map((plan) => plan.area).filter(Boolean)).size} areas`
+    : "Cloud beat plans will appear here after admin setup.";
+
+  list.innerHTML = plans.length
+    ? `<div class="route-line"></div>${plans
+        .slice()
+        .reverse()
+        .map((plan, index) => {
+          return `<div class="route-stop ${index === 0 ? "active" : ""}"><strong>${plan.sequence_no || index + 1}</strong><span>${plan.customer || plan.title} | ${plan.area || "No area"}</span></div>`;
+        })
+        .join("")}`
+    : `<div class="master-item"><strong>No cloud beat plan yet</strong><span>Admin can add beat plans in Supabase for testing.</span></div>`;
+}
+
+function renderTasks(tasks = []) {
+  const list = document.getElementById("mobileTaskList");
+  const count = document.getElementById("taskCount");
+  if (!list || !count) return;
+
+  count.textContent = `${tasks.filter((task) => task.status !== "Done").length} open`;
+  list.innerHTML = tasks.length
+    ? tasks
+        .map((task) => `<div class="master-item"><strong>${task.title}</strong><span>${task.priority || "Normal"} | Due: ${task.due_date || "-"}</span><span>Status: ${task.status || "Open"}</span></div>`)
+        .join("")
+    : `<div class="master-item"><strong>No tasks assigned</strong><span>Follow-ups and announcements will appear here.</span></div>`;
+}
+
+function renderSchemes(schemes = []) {
+  const list = document.getElementById("mobileSchemeList");
+  const count = document.getElementById("mobileSchemeCount");
+  if (!list || !count) return;
+
+  count.textContent = `${schemes.length} active`;
+  list.innerHTML = schemes.length
+    ? schemes
+        .map((scheme) => `<div class="master-item"><strong>${scheme.title}</strong><span>${scheme.scheme_type || "Scheme"} | ${scheme.product || "All products"}</span><span>${scheme.rule_text || "-"}</span></div>`)
+        .join("")
+    : `<div class="master-item"><strong>No active schemes</strong><span>Product schemes will appear here.</span></div>`;
+}
+
 function calculateOrderTotal() {
   return [...document.querySelectorAll(".qty-input")].reduce((sum, input) => {
     return sum + Number(input.value || 0) * Number(input.dataset.price || 0);
@@ -221,6 +269,11 @@ async function syncFromCloud() {
       cloudSelect("visits"),
       cloudSelect("orders")
     ]);
+    const [beatPlans, tasks, schemes] = await Promise.all([
+      cloudSelect("beat_plans"),
+      cloudSelect("tasks"),
+      cloudSelect("schemes")
+    ]);
 
     state.customers = customers.map((customer) => ({
       ...customer,
@@ -246,6 +299,9 @@ async function syncFromCloud() {
     renderHistory();
     renderCustomers();
     renderProducts();
+    renderBeatPlans(beatPlans || []);
+    renderTasks(tasks || []);
+    renderSchemes(schemes || []);
   } catch (error) {
     toast("Cloud setup pending. Using local save.");
   }
@@ -431,6 +487,9 @@ renderCheckIn();
 renderHistory();
 renderCustomers();
 renderProducts();
+renderBeatPlans();
+renderTasks();
+renderSchemes();
 renderOrderTotal();
 syncFromCloud();
 

@@ -58,11 +58,50 @@ create table if not exists public.attendance (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.beat_plans (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  assigned_to text,
+  area text,
+  customer text,
+  planned_date date default current_date,
+  sequence_no integer default 1,
+  status text not null default 'Planned',
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.tasks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  assigned_to text,
+  priority text default 'Normal',
+  due_date date default current_date,
+  status text default 'Open',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.schemes (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  scheme_type text,
+  product text,
+  customer_segment text,
+  rule_text text,
+  valid_from date default current_date,
+  valid_to date,
+  status text default 'Active',
+  created_at timestamptz not null default now()
+);
+
 alter table public.customers enable row level security;
 alter table public.products enable row level security;
 alter table public.visits enable row level security;
 alter table public.orders enable row level security;
 alter table public.attendance enable row level security;
+alter table public.beat_plans enable row level security;
+alter table public.tasks enable row level security;
+alter table public.schemes enable row level security;
 
 drop policy if exists "testing read customers" on public.customers;
 drop policy if exists "testing insert customers" on public.customers;
@@ -74,6 +113,14 @@ drop policy if exists "testing read orders" on public.orders;
 drop policy if exists "testing insert orders" on public.orders;
 drop policy if exists "testing read attendance" on public.attendance;
 drop policy if exists "testing insert attendance" on public.attendance;
+drop policy if exists "testing read beat plans" on public.beat_plans;
+drop policy if exists "testing insert beat plans" on public.beat_plans;
+drop policy if exists "testing update beat plans" on public.beat_plans;
+drop policy if exists "testing read tasks" on public.tasks;
+drop policy if exists "testing insert tasks" on public.tasks;
+drop policy if exists "testing update tasks" on public.tasks;
+drop policy if exists "testing read schemes" on public.schemes;
+drop policy if exists "testing insert schemes" on public.schemes;
 
 create policy "testing read customers" on public.customers for select to anon using (true);
 create policy "testing insert customers" on public.customers for insert to anon with check (true);
@@ -89,3 +136,14 @@ create policy "testing insert orders" on public.orders for insert to anon with c
 
 create policy "testing read attendance" on public.attendance for select to anon using (true);
 create policy "testing insert attendance" on public.attendance for insert to anon with check (true);
+
+create policy "testing read beat plans" on public.beat_plans for select to anon using (true);
+create policy "testing insert beat plans" on public.beat_plans for insert to anon with check (true);
+create policy "testing update beat plans" on public.beat_plans for update to anon using (true) with check (true);
+
+create policy "testing read tasks" on public.tasks for select to anon using (true);
+create policy "testing insert tasks" on public.tasks for insert to anon with check (true);
+create policy "testing update tasks" on public.tasks for update to anon using (true) with check (true);
+
+create policy "testing read schemes" on public.schemes for select to anon using (true);
+create policy "testing insert schemes" on public.schemes for insert to anon with check (true);

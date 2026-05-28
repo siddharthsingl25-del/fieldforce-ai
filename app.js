@@ -3,6 +3,8 @@ const viewTitles = {
   field: "Mobile Field App",
   customers: "Customer Master",
   products: "Product Master",
+  beatPlans: "Beat Plans",
+  tasks: "Tasks & Follow-ups",
   visits: "Visit Management",
   sales: "Sales & Order Management",
   schemes: "Scheme Management",
@@ -49,6 +51,14 @@ function switchView(viewId) {
 
   if (viewId === "visits") {
     renderCloudVisits();
+  }
+
+  if (viewId === "beatPlans") {
+    renderBeatPlans();
+  }
+
+  if (viewId === "tasks") {
+    renderTasks();
   }
 
   if (viewId === "sales") {
@@ -323,6 +333,70 @@ function renderCommandCenter() {
     });
 }
 
+function renderBeatPlans() {
+  const rows = document.getElementById("adminBeatRows");
+  const status = document.getElementById("beatPlanSyncStatus");
+  if (!rows) return;
+  if (status) status.textContent = "Refreshing cloud beat plans...";
+
+  cloudSelect("beat_plans")
+    .then((plans) => {
+      if (status) status.textContent = `Cloud synced: ${plans.length} beat plans`;
+      rows.innerHTML = plans.length
+        ? plans
+            .map((plan) => {
+              return `
+                <tr>
+                  <td>${plan.sequence_no || "-"}</td>
+                  <td><strong>${plan.title || "-"}</strong></td>
+                  <td>${plan.assigned_to || "-"}</td>
+                  <td>${plan.area || "-"}</td>
+                  <td>${plan.customer || "-"}</td>
+                  <td>${plan.planned_date || "-"}</td>
+                  <td><span class="tag">${plan.status || "Planned"}</span></td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `<tr><td colspan="7"><strong>No beat plans yet.</strong> Add rows in Supabase for testing.</td></tr>`;
+    })
+    .catch(() => {
+      if (status) status.textContent = "Cloud beat plans failed to load.";
+      rows.innerHTML = `<tr><td colspan="7">Cloud beat plans could not be loaded.</td></tr>`;
+    });
+}
+
+function renderTasks() {
+  const rows = document.getElementById("adminTaskRows");
+  const status = document.getElementById("taskSyncStatus");
+  if (!rows) return;
+  if (status) status.textContent = "Refreshing cloud tasks...";
+
+  cloudSelect("tasks")
+    .then((tasks) => {
+      if (status) status.textContent = `Cloud synced: ${tasks.length} tasks`;
+      rows.innerHTML = tasks.length
+        ? tasks
+            .map((task) => {
+              return `
+                <tr>
+                  <td><strong>${task.title || "-"}</strong></td>
+                  <td>${task.assigned_to || "-"}</td>
+                  <td>${task.priority || "-"}</td>
+                  <td>${task.due_date || "-"}</td>
+                  <td><span class="tag">${task.status || "Open"}</span></td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `<tr><td colspan="5"><strong>No tasks yet.</strong> Add tasks in Supabase for testing.</td></tr>`;
+    })
+    .catch(() => {
+      if (status) status.textContent = "Cloud tasks failed to load.";
+      rows.innerHTML = `<tr><td colspan="5">Cloud tasks could not be loaded.</td></tr>`;
+    });
+}
+
 async function renderMasterData() {
   const state = loadMobileState();
   const customerStatus = document.getElementById("customerSyncStatus");
@@ -353,8 +427,17 @@ document.querySelectorAll("[data-refresh-master]").forEach((button) => {
   button.addEventListener("click", renderMasterData);
 });
 
+document.querySelectorAll("[data-refresh-ops]").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (button.dataset.refreshOps === "beatPlans") renderBeatPlans();
+    if (button.dataset.refreshOps === "tasks") renderTasks();
+  });
+});
+
 renderVisits();
 renderProducts();
 renderMasterData();
 renderCommandCenter();
 renderCloudSales();
+renderBeatPlans();
+renderTasks();

@@ -84,9 +84,9 @@
         <section class="mobile-panel">
           <div class="panel-title">
             <h2>Beat Plan</h2>
-            <span>12 visits</span>
+            <span id="beatPlanCount">0 cloud</span>
           </div>
-          <div class="route-card">
+          <div class="route-card" id="cloudBeatList">
             <div class="route-line"></div>
             <div class="route-stop done"><strong>1</strong><span>Dr. Mehta Clinic</span></div>
             <div class="route-stop active"><strong>2</strong><span>Shiv Medicos</span></div>
@@ -96,7 +96,14 @@
         </section>
         <section class="mobile-panel compact">
           <strong>Route Summary</strong>
-          <p>Estimated 18.4 km | 5 hr 20 min | 3 high-value customers</p>
+          <p id="beatSummary">Cloud beat plans will appear here after admin setup.</p>
+        </section>
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Tasks & Follow-ups</h2>
+            <span id="taskCount">0 open</span>
+          </div>
+          <div class="master-list" id="mobileTaskList"></div>
         </section>
       </section>
 
@@ -139,6 +146,13 @@
       </section>
 
       <section class="mobile-view" id="m-order">
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Active Schemes</h2>
+            <span id="mobileSchemeCount">0 active</span>
+          </div>
+          <div class="master-list" id="mobileSchemeList"></div>
+        </section>
         <section class="mobile-panel">
           <div class="panel-title">
             <h2>Order Cart</h2>

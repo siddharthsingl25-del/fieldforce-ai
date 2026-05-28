@@ -25,6 +25,8 @@
           <button class="nav-item" data-view="field">Field App</button>
           <button class="nav-item" data-view="customers">Customers</button>
           <button class="nav-item" data-view="products">Products</button>
+          <button class="nav-item" data-view="beatPlans">Beat Plans</button>
+          <button class="nav-item" data-view="tasks">Tasks</button>
           <button class="nav-item" data-view="visits">Visits</button>
           <button class="nav-item" data-view="sales">Sales</button>
           <button class="nav-item" data-view="schemes">Schemes</button>
@@ -279,6 +281,58 @@
                 </tr>
               </thead>
               <tbody id="adminProductRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="beatPlans">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Tour planning</p>
+              <h2>Beat Plans</h2>
+              <p id="beatPlanSyncStatus">Loading cloud beat plans...</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="beatPlans">Refresh Data</button>
+          </div>
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Seq</th>
+                  <th>Title</th>
+                  <th>Assigned To</th>
+                  <th>Area</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminBeatRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="tasks">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Communication</p>
+              <h2>Tasks & Follow-ups</h2>
+              <p id="taskSyncStatus">Loading cloud tasks...</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="tasks">Refresh Data</button>
+          </div>
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Assigned To</th>
+                  <th>Priority</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="adminTaskRows"></tbody>
             </table>
           </div>
         </section>
