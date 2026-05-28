@@ -245,7 +245,10 @@
                 <h2>Add Customer / Stockist</h2>
                 <p>Use form entry for small changes, or CSV import for bulk master data.</p>
               </div>
-              <button class="primary-action secondary-action" data-download-sample="customers">Sample CSV</button>
+              <div class="import-actions">
+                <button class="primary-action secondary-action" data-download-sample="customers">Sample CSV</button>
+                <label class="primary-action secondary-action import-button">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv="customers" /></label>
+              </div>
             </div>
             <div class="builder-stack compact-form">
               <label>Type<select id="adminCustomerType"><option>Doctor</option><option>Retailer</option><option>Distributor</option><option>Stockist</option><option>Hospital</option><option>FMCG Outlet</option></select></label>
@@ -307,7 +310,10 @@
                 <h2>Add Product</h2>
                 <p>Add products one by one, or use sample CSV for bulk import preparation.</p>
               </div>
-              <button class="primary-action secondary-action" data-download-sample="products">Sample CSV</button>
+              <div class="import-actions">
+                <button class="primary-action secondary-action" data-download-sample="products">Sample CSV</button>
+                <label class="primary-action secondary-action import-button">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv="products" /></label>
+              </div>
             </div>
             <div class="builder-stack compact-form">
               <label>Product Name<input id="adminProductName" placeholder="e.g. CardioMax 10mg" /></label>
@@ -379,7 +385,10 @@
                 <h2>Add Area</h2>
                 <p>Create state, city, area, and manager mapping for territory setup.</p>
               </div>
-              <button class="primary-action secondary-action" data-download-sample="territories">Sample CSV</button>
+              <div class="import-actions">
+                <button class="primary-action secondary-action" data-download-sample="territories">Sample CSV</button>
+                <label class="primary-action secondary-action import-button">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv="territories" /></label>
+              </div>
             </div>
             <div class="builder-stack compact-form">
               <label>State<input id="territoryState" placeholder="e.g. Rajasthan" /></label>
@@ -438,7 +447,10 @@
                 <h2>Create Beat Plan</h2>
                 <p>Assign customer visits by user, area, date, and sequence.</p>
               </div>
-              <button class="primary-action secondary-action" data-download-sample="beatPlans">Sample CSV</button>
+              <div class="import-actions">
+                <button class="primary-action secondary-action" data-download-sample="beatPlans">Sample CSV</button>
+                <label class="primary-action secondary-action import-button">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv="beatPlans" /></label>
+              </div>
             </div>
             <div class="builder-stack compact-form">
               <label>Title<input id="beatTitle" placeholder="e.g. Jaipur East Morning Beat" /></label>
@@ -483,7 +495,10 @@
                 <h2>Create Task</h2>
                 <p>Assign follow-ups, collection reminders, training, and approvals.</p>
               </div>
-              <button class="primary-action secondary-action" data-download-sample="tasks">Sample CSV</button>
+              <div class="import-actions">
+                <button class="primary-action secondary-action" data-download-sample="tasks">Sample CSV</button>
+                <label class="primary-action secondary-action import-button">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv="tasks" /></label>
+              </div>
             </div>
             <div class="builder-stack compact-form">
               <label>Task Title<input id="taskTitle" placeholder="e.g. Collect payment from Shiv Medicos" /></label>
@@ -595,8 +610,8 @@
             <div class="master-list">
               <div class="master-item"><strong>1. Download sample CSV</strong><span>Open the module, click Sample CSV, and fill data in the same columns.</span></div>
               <div class="master-item"><strong>2. Review mandatory fields</strong><span>Products need name. Customers need type and name. Areas need state and area. Beat plans need title.</span></div>
-              <div class="master-item"><strong>3. Current testing method</strong><span>For now, add data through admin forms. CSV upload parser is the next implementation batch.</span></div>
-              <div class="master-item"><strong>4. Cloud verification</strong><span>After save, open Reports or the related module and click Refresh Data.</span></div>
+              <div class="master-item"><strong>3. Import CSV</strong><span>Click Import CSV in the same module and upload the completed file.</span></div>
+              <div class="master-item"><strong>4. Cloud verification</strong><span>After import, the module refreshes automatically. You can also click Refresh Data.</span></div>
             </div>
           </section>
         </section>
@@ -609,7 +624,10 @@
                   <h2>Scheme Builder</h2>
                   <p>Create trade schemes and product offers.</p>
                 </div>
-                <button class="primary-action secondary-action" data-download-sample="schemes">Sample CSV</button>
+                <div class="import-actions">
+                  <button class="primary-action secondary-action" data-download-sample="schemes">Sample CSV</button>
+                  <label class="primary-action secondary-action import-button">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv="schemes" /></label>
+                </div>
               </div>
               <div class="builder-stack">
                 <label>Scheme Title<input id="schemeTitle" placeholder="e.g. VitaPlus May Offer" /></label>

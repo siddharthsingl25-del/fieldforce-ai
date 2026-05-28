@@ -295,6 +295,159 @@ function downloadCsv(name, rows) {
   URL.revokeObjectURL(url);
 }
 
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === '"' && quoted && next === '"') {
+      value += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      row.push(value.trim());
+      value = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(value.trim());
+      if (row.some(Boolean)) rows.push(row);
+      row = [];
+      value = "";
+    } else {
+      value += char;
+    }
+  }
+
+  row.push(value.trim());
+  if (row.some(Boolean)) rows.push(row);
+  return rows;
+}
+
+function csvToObjects(text) {
+  const rows = parseCsv(text);
+  if (rows.length < 2) return [];
+  const headers = rows[0].map((header) => header.trim().toLowerCase());
+  return rows.slice(1).map((row) => {
+    return headers.reduce((record, header, index) => {
+      record[header] = row[index] || "";
+      return record;
+    }, {});
+  });
+}
+
+const importConfig = {
+  customers: {
+    table: "customers",
+    refresh: renderMasterData,
+    map: (row) => ({
+      type: row.type || "Retailer",
+      name: row.name,
+      mobile: row.mobile,
+      area: row.area,
+      customer_class: row.customer_class || row.class,
+      specialty: row.specialty,
+      outstanding: Number(row.outstanding || 0),
+      address: row.state || row.address,
+      created_by: "Admin CSV"
+    }),
+    required: "name"
+  },
+  products: {
+    table: "products",
+    refresh: renderMasterData,
+    map: (row) => ({
+      name: row.name,
+      composition: row.composition,
+      category: row.category,
+      pack: row.pack,
+      mrp: Number(row.mrp || 0),
+      sale_rate: Number(row.sale_rate || row.sale || 0),
+      scheme: row.scheme,
+      stock: Number(row.stock || 0),
+      created_by: "Admin CSV"
+    }),
+    required: "name"
+  },
+  territories: {
+    table: "territories",
+    refresh: renderTerritories,
+    map: (row) => ({
+      state: row.state,
+      city: row.city,
+      area: row.area,
+      territory: row.territory,
+      assigned_manager: row.assigned_manager || row.manager
+    }),
+    required: "area"
+  },
+  beatPlans: {
+    table: "beat_plans",
+    refresh: renderBeatPlans,
+    map: (row) => ({
+      title: row.title,
+      assigned_to: row.assigned_to,
+      area: row.area,
+      customer: row.customer,
+      planned_date: row.planned_date || new Date().toISOString().slice(0, 10),
+      sequence_no: Number(row.sequence_no || 1),
+      status: "Planned"
+    }),
+    required: "title"
+  },
+  tasks: {
+    table: "tasks",
+    refresh: renderTasks,
+    map: (row) => ({
+      title: row.title,
+      assigned_to: row.assigned_to,
+      priority: row.priority || "Normal",
+      due_date: row.due_date || new Date().toISOString().slice(0, 10),
+      status: "Open"
+    }),
+    required: "title"
+  },
+  schemes: {
+    table: "schemes",
+    refresh: renderSchemes,
+    map: (row) => ({
+      title: row.title,
+      scheme_type: row.scheme_type,
+      product: row.product,
+      customer_segment: row.customer_segment,
+      rule_text: row.rule_text,
+      status: "Active"
+    }),
+    required: "title"
+  }
+};
+
+async function importCsvFile(key, file) {
+  const config = importConfig[key];
+  if (!config || !file) return;
+
+  const rows = csvToObjects(await file.text())
+    .map(config.map)
+    .filter((row) => row[config.required]);
+
+  if (!rows.length) {
+    adminToast("No valid rows found. Use sample CSV columns.");
+    return;
+  }
+
+  adminToast(`Importing ${rows.length} rows...`);
+  for (const row of rows) {
+    await cloudInsert(config.table, row);
+  }
+  config.refresh();
+  adminToast(`${rows.length} rows imported`);
+}
+
 function money(value) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -883,6 +1036,20 @@ document.querySelectorAll("[data-download-sample]").forEach((button) => {
     if (!sampleCsv[key]) return;
     downloadCsv(key, sampleCsv[key]);
     adminToast("Sample CSV downloaded");
+  });
+});
+
+document.querySelectorAll("[data-import-csv]").forEach((input) => {
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    const key = input.dataset.importCsv;
+    try {
+      await importCsvFile(key, file);
+    } catch {
+      adminToast("CSV import failed. Check columns or run latest SQL.");
+    } finally {
+      input.value = "";
+    }
   });
 });
 

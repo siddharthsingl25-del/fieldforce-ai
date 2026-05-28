@@ -172,6 +172,13 @@ h2 {
   gap: 12px;
 }
 
+.import-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .icon-button,
 .primary-action {
   border: 0;
@@ -197,6 +204,20 @@ h2 {
 .secondary-action {
   background: #101820;
   min-width: max-content;
+}
+
+.import-button {
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.import-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 button.primary-action:hover,
