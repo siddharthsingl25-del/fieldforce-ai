@@ -284,6 +284,72 @@ input {
   background: white;
 }
 
+.filter-row {
+  display: grid;
+  grid-template-columns: 220px minmax(260px, 1fr) 210px;
+  gap: 14px;
+  align-items: end;
+}
+
+.checkline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  font-weight: 800;
+}
+
+.checkline input {
+  width: auto;
+}
+
+.transfer-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px minmax(220px, 1fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.transfer-grid h3 {
+  margin: 0 0 12px;
+}
+
+.transfer-center {
+  display: grid;
+  place-items: center;
+}
+
+.report-directory {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 12px;
+  background: white;
+}
+
+.report-item {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 18px;
+  cursor: pointer;
+}
+
+.report-item:last-child {
+  border-bottom: 0;
+}
+
+.report-item strong {
+  display: block;
+  color: #2f6fb1;
+  font-size: 1.02rem;
+}
+
+.report-item span {
+  display: block;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
 .map-board {
   min-height: 360px;
   border-radius: 8px;
@@ -750,7 +816,9 @@ th {
   .rules-layout,
   .ai-layout,
   .incentive-grid,
-  .gamify-hero {
+  .gamify-hero,
+  .filter-row,
+  .transfer-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -781,7 +849,9 @@ th {
   .ai-layout,
   .incentive-grid,
   .gamify-hero,
-  .badge-grid {
+  .badge-grid,
+  .filter-row,
+  .transfer-grid {
     grid-template-columns: 1fr;
   }
 

@@ -324,7 +324,22 @@
                 <p>Search by product name, composition, category, scheme, MRP, sale rate.</p>
               </div>
             </div>
-            <input id="adminProductSearch" placeholder="Search products or composition..." />
+            <div class="filter-row">
+              <label>
+                Category
+                <select id="adminProductCategoryFilter">
+                  <option value="">All Categories</option>
+                </select>
+              </label>
+              <label>
+                Search
+                <input id="adminProductSearch" placeholder="Search products or composition..." />
+              </label>
+              <label class="checkline">
+                <input id="adminActiveSkuOnly" type="checkbox" checked />
+                Show only active stock
+              </label>
+            </div>
           </section>
           <div class="table-panel">
             <table>
@@ -370,6 +385,31 @@
               <label>Assigned Manager<input id="territoryManager" placeholder="ASM / RM name" /></label>
             </div>
             <button class="primary-action admin-save" id="adminSaveTerritory">Save Area</button>
+          </section>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Transfer Areas</h2>
+                <p>Move an area from one zone/distributor/manager to another for beat bifurcation.</p>
+              </div>
+            </div>
+            <div class="transfer-grid">
+              <div>
+                <h3>From</h3>
+                <label>Zone / State<select id="transferFromState"></select></label>
+                <label>Area<select id="transferFromArea"></select></label>
+                <label>Current Manager<input id="transferFromManager" placeholder="Auto-filled after selection" readonly /></label>
+              </div>
+              <div class="transfer-center">
+                <button class="primary-action" id="adminTransferArea">Transfer Area</button>
+              </div>
+              <div>
+                <h3>To</h3>
+                <label>Zone / State<input id="transferToState" placeholder="e.g. Punjab" /></label>
+                <label>Distributor / City<input id="transferToCity" placeholder="e.g. SPC Jaipur" /></label>
+                <label>New Manager<input id="transferToManager" placeholder="ASM / DSM name" /></label>
+              </div>
+            </div>
           </section>
           <div class="table-panel">
             <table>
@@ -504,6 +544,16 @@
             </div>
             <button class="primary-action" data-refresh-ops="reports">Refresh Reports</button>
           </div>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Report Directory</h2>
+                <p>Search operational reports like Bizom: performance, outlet sales, target, tracking, and EOD.</p>
+              </div>
+            </div>
+            <input id="adminReportSearch" placeholder="Search reports..." />
+            <div class="report-directory" id="adminReportDirectory"></div>
+          </section>
           <div class="metric-grid">
             <article class="metric"><span>Attendance</span><strong id="reportAttendance">0</strong><small>Check-ins</small></article>
             <article class="metric"><span>Visits</span><strong id="reportVisits">0</strong><small>DCR entries</small></article>
@@ -569,6 +619,18 @@
             <section class="panel">
               <h2>Active Schemes</h2>
               <div class="master-list" id="adminSchemeRows"></div>
+            </section>
+            <section class="panel">
+              <h2>Discount / Scheme Assignment</h2>
+              <div class="builder-stack">
+                <label>From Level<select id="discountFromLevel"><option>Company</option><option>Zone</option><option>Distributor</option><option>Retailer Class</option></select></label>
+                <label>To Level<select id="discountToLevel"><option>Distributor</option><option>Retailer</option><option>Doctor</option><option>All Customers</option></select></label>
+                <label>Zone / Area<input id="discountZone" placeholder="e.g. Punjab / Jaipur East" /></label>
+                <label>Entity<select id="discountEntity"><option>Products</option><option>SKUs</option><option>Customer Segment</option></select></label>
+                <label>Discount %<input id="discountPercent" type="number" min="0" max="100" value="5" /></label>
+                <button class="primary-action" id="adminAssignDiscount">Assign Discount</button>
+              </div>
+              <div class="master-list" id="adminDiscountRows"></div>
             </section>
           </div>
         </section>

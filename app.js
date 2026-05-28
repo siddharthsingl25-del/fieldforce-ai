@@ -83,6 +83,23 @@ const products = [
 
 let cachedCustomers = [];
 let cachedProducts = [];
+let cachedTerritories = [];
+let discountAssignments = [];
+
+const reportCatalog = [
+  ["5324", "User Performance Dashboard", "Attendance, calls, productivity, outlet time, and KM by user"],
+  ["13071", "BU Dashboard", "Business unit sales, zones, schemes, and growth"],
+  ["15875", "Salesman Performance Dashboard", "Daily MR scorecard with calls, productive calls, orders, and route coverage"],
+  ["16538", "Manager Dashboard", "ASM/RM team summary with exceptions and approvals"],
+  ["274", "Target Vs Achievement Report", "Monthly target, achievement, gap, and ranking"],
+  ["522", "Outlet wise Sale Report", "Outlet customer sales, order value, SKU mix, and last visit"],
+  ["1137", "User wise Target and Achievement", "User level target slabs and achievement tracking"],
+  ["1255", "New Outlet Activation Report", "New doctors, retailers, distributors, and outlet onboarding"],
+  ["1642", "User Tracking", "GPS attendance, live status, route and outlet check-out tracking"],
+  ["1895", "EOD Report", "End-of-day attendance, first call, last call, outlet time, and KM"],
+  ["2101", "Product Performance Report", "SKU sales, MRP, sale rate, stock, schemes, and category mix"],
+  ["2202", "Scheme Utilization Report", "Scheme assignment, eligible customers, and redemption impact"]
+];
 
 function switchView(viewId) {
   document.querySelectorAll(".view").forEach((view) => {
@@ -377,9 +394,15 @@ function renderAdminProducts(products) {
   if (!rows) return;
   cachedProducts = products;
   const query = valueOf("adminProductSearch").toLowerCase();
-  const visibleProducts = query
-    ? products.filter((product) => [product.name, product.composition, product.category, product.pack, product.scheme, product.mrp, product.saleRate, product.sale_rate].join(" ").toLowerCase().includes(query))
-    : products;
+  const category = valueOf("adminProductCategoryFilter");
+  const activeOnly = document.getElementById("adminActiveSkuOnly")?.checked;
+  populateProductCategoryFilter(products);
+  const visibleProducts = products.filter((product) => {
+    const matchesQuery = !query || [product.name, product.composition, product.category, product.pack, product.scheme, product.mrp, product.saleRate, product.sale_rate].join(" ").toLowerCase().includes(query);
+    const matchesCategory = !category || product.category === category;
+    const matchesActive = !activeOnly || Number(product.stock || 0) > 0;
+    return matchesQuery && matchesCategory && matchesActive;
+  });
 
   const stockTotal = visibleProducts.reduce((sum, product) => sum + Number(product.stock || 0), 0);
   const avgMrp = visibleProducts.length ? visibleProducts.reduce((sum, product) => sum + Number(product.mrp || 0), 0) / visibleProducts.length : 0;
@@ -414,6 +437,15 @@ function renderAdminProducts(products) {
         <td colspan="8"><strong>No product data yet.</strong> Add products from the mobile app, then refresh this page.</td>
       </tr>
     `;
+}
+
+function populateProductCategoryFilter(products) {
+  const select = document.getElementById("adminProductCategoryFilter");
+  if (!select) return;
+  const current = select.value;
+  const categories = [...new Set(products.map((product) => product.category).filter(Boolean))].sort();
+  select.innerHTML = `<option value="">All Categories</option>${categories.map((item) => `<option value="${item}">${item}</option>`).join("")}`;
+  select.value = categories.includes(current) ? current : "";
 }
 
 function renderCloudSales() {
@@ -484,6 +516,8 @@ function renderTerritories() {
 
   cloudSelect("territories")
     .then((items) => {
+      cachedTerritories = items || [];
+      populateTransferOptions(cachedTerritories);
       if (status) status.textContent = `Cloud synced: ${items.length} areas`;
       rows.innerHTML = items.length
         ? items.map((item) => `
@@ -502,6 +536,30 @@ function renderTerritories() {
       if (status) status.textContent = "Cloud areas failed to load.";
       rows.innerHTML = `<tr><td colspan="6">Cloud areas could not be loaded.</td></tr>`;
     });
+}
+
+function populateTransferOptions(items) {
+  const stateSelect = document.getElementById("transferFromState");
+  const areaSelect = document.getElementById("transferFromArea");
+  const managerInput = document.getElementById("transferFromManager");
+  if (!stateSelect || !areaSelect) return;
+
+  const states = [...new Set(items.map((item) => item.state).filter(Boolean))].sort();
+  const selectedState = stateSelect.value || states[0] || "";
+  stateSelect.innerHTML = states.length
+    ? states.map((state) => `<option value="${state}">${state}</option>`).join("")
+    : `<option value="">No areas</option>`;
+  stateSelect.value = states.includes(selectedState) ? selectedState : states[0] || "";
+
+  const areas = items.filter((item) => !stateSelect.value || item.state === stateSelect.value);
+  const selectedArea = areaSelect.value || areas[0]?.area || "";
+  areaSelect.innerHTML = areas.length
+    ? areas.map((item) => `<option value="${item.area}">${item.area} - ${item.territory || item.city || "No territory"}</option>`).join("")
+    : `<option value="">No area</option>`;
+  areaSelect.value = areas.some((item) => item.area === selectedArea) ? selectedArea : areas[0]?.area || "";
+
+  const selected = items.find((item) => item.state === stateSelect.value && item.area === areaSelect.value);
+  if (managerInput) managerInput.value = selected?.assigned_manager || "";
 }
 
 function renderBeatPlans() {
@@ -606,9 +664,38 @@ function renderGroup(targetId, groups) {
     : `<div class="master-item"><strong>No data yet</strong></div>`;
 }
 
+function renderReportDirectory() {
+  const target = document.getElementById("adminReportDirectory");
+  if (!target) return;
+  const query = valueOf("adminReportSearch").toLowerCase();
+  const reports = reportCatalog.filter(([id, title, detail]) => !query || [id, title, detail].join(" ").toLowerCase().includes(query));
+  target.innerHTML = reports.length
+    ? reports.map(([id, title, detail]) => `
+      <div class="report-item" data-report-id="${id}">
+        <strong>${id}. ${title}</strong>
+        <span>${detail}</span>
+      </div>
+    `).join("")
+    : `<div class="report-item"><strong>No report found</strong><span>Try performance, outlet, target, tracking, product, or scheme.</span></div>`;
+}
+
+function renderDiscountRows() {
+  const target = document.getElementById("adminDiscountRows");
+  if (!target) return;
+  target.innerHTML = discountAssignments.length
+    ? discountAssignments.map((item) => `
+      <div class="master-item">
+        <strong>${item.discount}% ${item.entity}</strong>
+        <span>${item.fromLevel} to ${item.toLevel} | ${item.zone || "All zones"}</span>
+      </div>
+    `).join("")
+    : `<div class="master-item"><strong>No discount assigned</strong><span>Assign scheme/discount level for testing.</span></div>`;
+}
+
 function renderReports() {
   const status = document.getElementById("reportSyncStatus");
   if (status) status.textContent = "Refreshing cloud reports...";
+  renderReportDirectory();
 
   Promise.all([
     cloudSelect("attendance"),
@@ -716,6 +803,44 @@ document.querySelectorAll("[data-download-sample]").forEach((button) => {
 
 document.getElementById("adminCustomerSearch")?.addEventListener("input", () => renderAdminCustomers(cachedCustomers));
 document.getElementById("adminProductSearch")?.addEventListener("input", () => renderAdminProducts(cachedProducts));
+document.getElementById("adminProductCategoryFilter")?.addEventListener("change", () => renderAdminProducts(cachedProducts));
+document.getElementById("adminActiveSkuOnly")?.addEventListener("change", () => renderAdminProducts(cachedProducts));
+document.getElementById("adminReportSearch")?.addEventListener("input", renderReportDirectory);
+document.getElementById("transferFromState")?.addEventListener("change", () => populateTransferOptions(cachedTerritories));
+document.getElementById("transferFromArea")?.addEventListener("change", () => populateTransferOptions(cachedTerritories));
+
+document.getElementById("adminAssignDiscount")?.addEventListener("click", () => {
+  discountAssignments.unshift({
+    fromLevel: valueOf("discountFromLevel"),
+    toLevel: valueOf("discountToLevel"),
+    zone: valueOf("discountZone"),
+    entity: valueOf("discountEntity"),
+    discount: numberValue("discountPercent")
+  });
+  renderDiscountRows();
+  adminToast("Discount assignment added");
+});
+
+document.getElementById("adminTransferArea")?.addEventListener("click", async () => {
+  const selected = cachedTerritories.find((item) => item.state === valueOf("transferFromState") && item.area === valueOf("transferFromArea"));
+  const toState = valueOf("transferToState");
+  if (!selected || !toState) return adminToast("Select from area and to state");
+
+  try {
+    await cloudInsert("territories", {
+      state: toState,
+      city: valueOf("transferToCity") || selected.city,
+      area: selected.area,
+      territory: `${selected.area} transfer`,
+      assigned_manager: valueOf("transferToManager") || selected.assigned_manager,
+      status: "Transferred"
+    });
+    renderTerritories();
+    adminToast("Area transfer saved");
+  } catch {
+    adminToast("Transfer failed. Run latest SQL if needed.");
+  }
+});
 
 document.getElementById("adminSaveProduct")?.addEventListener("click", async () => {
   const name = valueOf("adminProductName");
@@ -863,4 +988,6 @@ renderBeatPlans();
 renderTasks();
 renderTerritories();
 renderSchemes();
+renderReportDirectory();
+renderDiscountRows();
 renderReports();
