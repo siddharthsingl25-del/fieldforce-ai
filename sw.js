@@ -1,4 +1,4 @@
-const cacheName = "fieldforce-ai-v1";
+const cacheName = "fieldforce-ai-v2";
 const filesToCache = [
   "./",
   "./index.html",
@@ -32,8 +32,20 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(cacheName).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
