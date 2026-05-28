@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>FieldForce AI Mobile</title>
+    <meta name="theme-color" content="#168765" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-192.svg" />
+    <link rel="stylesheet" href="mobile.css" />
+  </head>
+  <body>
+    <section class="login-screen" id="loginScreen">
+      <div class="login-card">
+        <span class="pill">FieldForce AI</span>
+        <h1>Start your field day</h1>
+        <p>Select a demo role to enter the mobile app.</p>
+        <label>
+          User Role
+          <select id="roleSelect">
+            <option value="MR">Medical Representative</option>
+            <option value="SO">FMCG Sales Officer</option>
+            <option value="ASM">Area Sales Manager</option>
+          </select>
+        </label>
+        <label>
+          Name
+          <input id="userNameInput" value="Riya Sharma" />
+        </label>
+        <button class="submit-button" id="loginButton">Login Demo</button>
+      </div>
+    </section>
+
+    <main class="mobile-app">
+      <header class="mobile-header">
+        <div>
+          <p id="userRoleLabel">FieldForce AI</p>
+          <h1 id="mobileTitle">Today</h1>
+        </div>
+        <button class="round-button" aria-label="Notifications">!</button>
+      </header>
+
+      <section class="mobile-view active" id="m-home">
+        <article class="hero-card">
+          <span class="pill">Thursday, 28 May</span>
+          <h2 id="welcomeName">Good morning, Riya</h2>
+          <p>12 planned visits in Jaipur East. AI recommends starting near Apex Hospital.</p>
+          <button class="check-button" id="checkButton">GPS Check In</button>
+        </article>
+
+        <div class="quick-grid">
+          <article><strong>₹1.8L</strong><span>Today target</span></article>
+          <article><strong>8</strong><span>Day streak</span></article>
+          <article><strong>72%</strong><span>Achievement</span></article>
+          <article><strong>4.9k</strong><span>Points</span></article>
+        </div>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Next Best Actions</h2>
+            <span>AI</span>
+          </div>
+          <div class="action-list">
+            <button>Visit Dr. Mehta before 11:30 AM</button>
+            <button>Push CardioMax samples to 3 cardiologists</button>
+            <button>Collect ₹18,500 from Shiv Medicos</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="mobile-view" id="m-beat">
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Beat Plan</h2>
+            <span>12 visits</span>
+          </div>
+          <div class="route-card">
+            <div class="route-line"></div>
+            <div class="route-stop done"><strong>1</strong><span>Dr. Mehta Clinic</span></div>
+            <div class="route-stop active"><strong>2</strong><span>Shiv Medicos</span></div>
+            <div class="route-stop"><strong>3</strong><span>City Pharma Stockist</span></div>
+            <div class="route-stop"><strong>4</strong><span>Wellness Mart</span></div>
+          </div>
+        </section>
+        <section class="mobile-panel compact">
+          <strong>Route Summary</strong>
+          <p>Estimated 18.4 km | 5 hr 20 min | 3 high-value customers</p>
+        </section>
+      </section>
+
+      <section class="mobile-view" id="m-visit">
+        <section class="customer-card">
+          <span class="pill">Current Visit</span>
+          <h2>Shiv Medicos</h2>
+          <p>A-Class retailer | 1.2 km away | Last order ₹42,000</p>
+          <div class="visit-actions">
+            <button>Start Visit</button>
+            <button>Voice Note</button>
+            <button>Upload Photo</button>
+          </div>
+        </section>
+
+        <section class="mobile-panel">
+          <h2>Visit Report</h2>
+          <label>
+            Outcome
+            <select id="visitOutcome">
+              <option>Productive Call</option>
+              <option>Non-Productive Call</option>
+              <option>Shop Closed</option>
+            </select>
+          </label>
+          <label>
+            Notes
+            <textarea id="visitNotes" placeholder="Add visit notes...">Discussed VitaPlus combo scheme and refill requirement.</textarea>
+          </label>
+          <button class="submit-button" id="submitVisitButton">Submit Visit</button>
+        </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Today History</h2>
+            <span id="historyCount">0 saved</span>
+          </div>
+          <div class="history-list" id="historyList"></div>
+        </section>
+      </section>
+
+      <section class="mobile-view" id="m-order">
+        <section class="mobile-panel">
+          <div class="panel-title">
+            <h2>Order Cart</h2>
+            <span>Scheme applied</span>
+          </div>
+          <div class="sku-row">
+            <div><strong>CardioMax</strong><span>PTR ₹148 | Stock available</span></div>
+            <input class="qty-input" type="number" value="12" min="0" data-price="148" />
+          </div>
+          <div class="sku-row">
+            <div><strong>VitaPlus</strong><span>Buy 10 get 2 free</span></div>
+            <input class="qty-input" type="number" value="10" min="0" data-price="220" />
+          </div>
+          <div class="sku-row">
+            <div><strong>GlucoSafe</strong><span>AI suggested reorder</span></div>
+            <input class="qty-input" type="number" value="6" min="0" data-price="156" />
+          </div>
+        </section>
+        <section class="total-card">
+          <span>Total Order</span>
+          <strong id="orderTotal">₹5,712</strong>
+          <button class="submit-button" id="bookOrderButton">Book Order</button>
+        </section>
+      </section>
+
+      <section class="mobile-view" id="m-rewards">
+        <section class="reward-card">
+          <span>Level 12</span>
+          <h2>Market Champion</h2>
+          <p>4,920 points | 8-day streak</p>
+        </section>
+        <div class="badge-list">
+          <span>Beat Finisher</span>
+          <span>Collection Hero</span>
+          <span>Launch Master</span>
+          <span>Zero Miss Streak</span>
+        </div>
+      </section>
+
+      <section class="mobile-view" id="m-ai">
+        <section class="mobile-panel chat-panel">
+          <h2>AI Assistant</h2>
+          <div class="chat-bubble ai">You are behind target by ₹42,000. Visit Shiv Medicos and Wellness Mart first.</div>
+          <div class="chat-bubble user">Suggest my next order pitch.</div>
+          <div class="chat-bubble ai">Pitch VitaPlus combo scheme, then add GlucoSafe reorder based on last 30-day movement.</div>
+          <div class="chat-input">
+            <input placeholder="Ask AI..." />
+            <button>Send</button>
+          </div>
+        </section>
+      </section>
+
+      <nav class="bottom-nav" aria-label="Mobile navigation">
+        <button class="active" data-mobile-view="m-home">Home</button>
+        <button data-mobile-view="m-beat">Beat</button>
+        <button data-mobile-view="m-visit">Visit</button>
+        <button data-mobile-view="m-order">Order</button>
+        <button data-mobile-view="m-rewards">Rewards</button>
+        <button data-mobile-view="m-ai">AI</button>
+      </nav>
+    </main>
+
+    <script src="mobile.js"></script>
+  </body>
+</html>

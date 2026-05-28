@@ -1,0 +1,25 @@
+{
+  "name": "FieldForce AI",
+  "short_name": "FieldForce",
+  "description": "Mobile-first Pharma and FMCG field force management app.",
+  "start_url": "mobile.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fbfa",
+  "theme_color": "#168765",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

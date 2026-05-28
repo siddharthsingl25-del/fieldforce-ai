@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="FieldForce AI icon">
+  <rect width="192" height="192" rx="42" fill="#168765"/>
+  <path d="M44 52h72v24H72v24h38v24H72v44H44V52Z" fill="#ffffff"/>
+  <path d="M128 52h24v116h-24V52Z" fill="#101820"/>
+  <circle cx="140" cy="132" r="24" fill="#ffffff"/>
+  <path d="M129 132h22M140 121v22" stroke="#168765" stroke-width="8" stroke-linecap="round"/>
+</svg>
