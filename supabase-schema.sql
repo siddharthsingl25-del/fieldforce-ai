@@ -47,10 +47,22 @@ create table if not exists public.orders (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.attendance (
+  id uuid primary key default gen_random_uuid(),
+  user_name text not null,
+  role text,
+  status text not null,
+  attendance_time text,
+  latitude numeric,
+  longitude numeric,
+  created_at timestamptz not null default now()
+);
+
 alter table public.customers enable row level security;
 alter table public.products enable row level security;
 alter table public.visits enable row level security;
 alter table public.orders enable row level security;
+alter table public.attendance enable row level security;
 
 drop policy if exists "testing read customers" on public.customers;
 drop policy if exists "testing insert customers" on public.customers;
@@ -60,6 +72,8 @@ drop policy if exists "testing read visits" on public.visits;
 drop policy if exists "testing insert visits" on public.visits;
 drop policy if exists "testing read orders" on public.orders;
 drop policy if exists "testing insert orders" on public.orders;
+drop policy if exists "testing read attendance" on public.attendance;
+drop policy if exists "testing insert attendance" on public.attendance;
 
 create policy "testing read customers" on public.customers for select to anon using (true);
 create policy "testing insert customers" on public.customers for insert to anon with check (true);
@@ -72,3 +86,6 @@ create policy "testing insert visits" on public.visits for insert to anon with c
 
 create policy "testing read orders" on public.orders for select to anon using (true);
 create policy "testing insert orders" on public.orders for insert to anon with check (true);
+
+create policy "testing read attendance" on public.attendance for select to anon using (true);
+create policy "testing insert attendance" on public.attendance for insert to anon with check (true);

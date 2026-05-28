@@ -55,23 +55,23 @@
           <div class="metric-grid">
             <article class="metric">
               <span>Team Present</span>
-              <strong>86%</strong>
-              <small>129 of 150 checked in</small>
+              <strong id="commandAttendance">0</strong>
+              <small>Cloud check-ins today</small>
             </article>
             <article class="metric">
               <span>Visits Completed</span>
-              <strong>1,248</strong>
-              <small>+18% vs yesterday</small>
+              <strong id="commandVisits">0</strong>
+              <small>Cloud visit reports</small>
             </article>
             <article class="metric">
               <span>Orders Booked</span>
-              <strong>₹42.7L</strong>
-              <small>312 productive calls</small>
+              <strong id="commandOrders">₹0</strong>
+              <small id="commandOrderCount">0 cloud orders</small>
             </article>
             <article class="metric">
               <span>Alerts</span>
-              <strong>17</strong>
-              <small>GPS, missed visits, stockouts</small>
+              <strong id="commandCustomers">0</strong>
+              <small>Cloud customers</small>
             </article>
           </div>
 
@@ -204,10 +204,11 @@
               <thead>
                 <tr>
                   <th>Customer</th>
-                  <th>Type</th>
+                  <th>User</th>
                   <th>Status</th>
                   <th>Outcome</th>
-                  <th>Next Action</th>
+                  <th>Notes</th>
+                  <th>Time</th>
                 </tr>
               </thead>
               <tbody id="visitRows"></tbody>
@@ -284,14 +285,31 @@
 
         <section class="view" id="sales">
           <div class="metric-grid">
-            <article class="metric"><span>Primary Sales</span><strong>₹2.8Cr</strong><small>This month</small></article>
-            <article class="metric"><span>Secondary Sales</span><strong>₹1.9Cr</strong><small>72% achievement</small></article>
-            <article class="metric"><span>Collections</span><strong>₹86L</strong><small>Due this week</small></article>
-            <article class="metric"><span>Returns</span><strong>1.8%</strong><small>Within control</small></article>
+            <article class="metric"><span>Cloud Orders</span><strong id="salesOrderCount">0</strong><small>Total booked orders</small></article>
+            <article class="metric"><span>Cloud Sales</span><strong id="salesOrderTotal">₹0</strong><small>Order value</small></article>
+            <article class="metric"><span>Products</span><strong id="salesProductCount">0</strong><small>Product master count</small></article>
+            <article class="metric"><span>Avg Order</span><strong id="salesAvgOrder">₹0</strong><small>Based on cloud orders</small></article>
           </div>
           <section class="panel">
             <h2>Product Performance</h2>
             <div class="product-list" id="productRows"></div>
+          </section>
+          <section class="panel">
+            <h2>Recent Orders</h2>
+            <div class="table-panel">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Total</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOrderRows"></tbody>
+              </table>
+            </div>
           </section>
         </section>
 

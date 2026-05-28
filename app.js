@@ -46,6 +46,18 @@ function switchView(viewId) {
   if (viewId === "customers" || viewId === "products") {
     renderMasterData();
   }
+
+  if (viewId === "visits") {
+    renderCloudVisits();
+  }
+
+  if (viewId === "sales") {
+    renderCloudSales();
+  }
+
+  if (viewId === "command") {
+    renderCommandCenter();
+  }
 }
 
 function loadMobileState() {
@@ -123,6 +135,38 @@ function renderVisits() {
       `;
     })
     .join("");
+}
+
+function renderCloudVisits() {
+  const target = document.getElementById("visitRows");
+  if (!target) return;
+
+  cloudSelect("visits")
+    .then((items) => {
+      target.innerHTML = items.length
+        ? items
+            .map((visit) => {
+              return `
+                <tr>
+                  <td><strong>${visit.customer || "-"}</strong></td>
+                  <td>${visit.user_name || "-"}</td>
+                  <td><span class="tag">${visit.role || "MR"}</span></td>
+                  <td>${visit.outcome || "-"}</td>
+                  <td>${visit.notes || "-"}</td>
+                  <td>${visit.visit_time || "-"}</td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `
+          <tr>
+            <td colspan="6"><strong>No cloud visits yet.</strong> Submit a visit from mobile app.</td>
+          </tr>
+        `;
+    })
+    .catch(() => {
+      renderVisits();
+    });
 }
 
 function renderProducts() {
@@ -219,6 +263,66 @@ function renderAdminProducts(products) {
     `;
 }
 
+function renderCloudSales() {
+  const rows = document.getElementById("adminOrderRows");
+  if (!rows) return;
+
+  Promise.all([cloudSelect("orders"), cloudSelect("products")])
+    .then(([orders, productItems]) => {
+      const total = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const average = orders.length ? total / orders.length : 0;
+
+      document.getElementById("salesOrderCount").textContent = orders.length;
+      document.getElementById("salesOrderTotal").textContent = money(total);
+      document.getElementById("salesProductCount").textContent = productItems.length;
+      document.getElementById("salesAvgOrder").textContent = money(average);
+
+      rows.innerHTML = orders.length
+        ? orders
+            .map((order) => {
+              return `
+                <tr>
+                  <td><strong>${order.customer || "-"}</strong></td>
+                  <td>${order.user_name || "-"}</td>
+                  <td>${order.role || "-"}</td>
+                  <td>${money(order.total)}</td>
+                  <td>${order.order_time || "-"}</td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `
+          <tr>
+            <td colspan="5"><strong>No cloud orders yet.</strong> Book an order from mobile app.</td>
+          </tr>
+        `;
+    })
+    .catch(() => {
+      rows.innerHTML = `<tr><td colspan="5">Cloud orders could not be loaded.</td></tr>`;
+    });
+}
+
+function renderCommandCenter() {
+  Promise.all([
+    cloudSelect("attendance"),
+    cloudSelect("visits"),
+    cloudSelect("orders"),
+    cloudSelect("customers")
+  ])
+    .then(([attendance, visitItems, orderItems, customerItems]) => {
+      const orderTotal = orderItems.reduce((sum, order) => sum + Number(order.total || 0), 0);
+
+      document.getElementById("commandAttendance").textContent = attendance.filter((item) => item.status === "Checked In").length;
+      document.getElementById("commandVisits").textContent = visitItems.length;
+      document.getElementById("commandOrders").textContent = money(orderTotal);
+      document.getElementById("commandOrderCount").textContent = `${orderItems.length} cloud orders`;
+      document.getElementById("commandCustomers").textContent = customerItems.length;
+    })
+    .catch(() => {
+      document.getElementById("commandOrderCount").textContent = "Cloud sync pending";
+    });
+}
+
 async function renderMasterData() {
   const state = loadMobileState();
   const customerStatus = document.getElementById("customerSyncStatus");
@@ -252,3 +356,5 @@ document.querySelectorAll("[data-refresh-master]").forEach((button) => {
 renderVisits();
 renderProducts();
 renderMasterData();
+renderCommandCenter();
+renderCloudSales();

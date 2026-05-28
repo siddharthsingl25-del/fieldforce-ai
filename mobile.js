@@ -272,7 +272,16 @@ document.getElementById("checkButton").addEventListener("click", () => {
   state.checkedIn = !state.checkedIn;
   saveState();
   renderCheckIn();
-  toast(state.checkedIn ? "Attendance checked in" : "Checked out");
+  const status = state.checkedIn ? "Checked In" : "Checked Out";
+
+  cloudInsert("attendance", {
+    user_name: state.name,
+    role: state.role,
+    status,
+    attendance_time: currentTime()
+  })
+    .then(() => toast(`${status} saved to cloud`))
+    .catch(() => toast(state.checkedIn ? "Attendance checked in" : "Checked out"));
 });
 
 document.getElementById("submitVisitButton").addEventListener("click", async () => {
