@@ -15,6 +15,51 @@ const viewTitles = {
   ai: "AI Sales Copilot"
 };
 
+const contextActions = {
+  command: { label: "Refresh Dashboard", action: renderCommandCenter },
+  customers: { label: "Create Customer", target: "adminCustomerName" },
+  products: { label: "Create Product", target: "adminProductName" },
+  territories: { label: "Create Area", target: "territoryState" },
+  beatPlans: { label: "Create Beat Plan", target: "beatTitle" },
+  tasks: { label: "Create Task", target: "taskTitle" },
+  schemes: { label: "Create Scheme", target: "schemeTitle" },
+  visits: { label: "Refresh Visits", action: renderCloudVisits },
+  sales: { label: "Refresh Sales", action: renderCloudSales },
+  reports: { label: "Refresh Reports", action: renderReports },
+  field: { label: "Open Mobile", action: () => window.open("/mobile", "_blank") },
+  incentives: { label: "Coming Next", action: () => adminToast("Incentive builder is next batch") },
+  gamify: { label: "Coming Next", action: () => adminToast("Gamification rules are next batch") },
+  ai: { label: "Ask AI", target: null }
+};
+
+const sampleCsv = {
+  customers: [
+    ["type", "name", "mobile", "state", "area", "customer_class", "specialty", "outstanding"],
+    ["Doctor", "Dr. Mehta Clinic", "9876543210", "Rajasthan", "Jaipur East", "A-Class", "Cardiologist", "0"],
+    ["Stockist", "City Pharma Stockist", "9876500000", "Rajasthan", "Jaipur East", "A-Class", "Pharma Distribution", "18500"]
+  ],
+  products: [
+    ["name", "composition", "category", "pack", "mrp", "sale_rate", "scheme", "stock"],
+    ["CardioMax 10mg", "Atorvastatin 10mg", "Cardiac", "10x10 tablets", "180", "148", "Buy 10 get 2 free", "120"]
+  ],
+  territories: [
+    ["state", "city", "area", "territory", "assigned_manager"],
+    ["Rajasthan", "Jaipur", "Jaipur East", "Jaipur East-01", "Amit ASM"]
+  ],
+  beatPlans: [
+    ["title", "assigned_to", "area", "customer", "planned_date", "sequence_no"],
+    ["Jaipur East Morning Beat", "Riya Sharma", "Jaipur East", "Dr. Mehta Clinic", "2026-05-29", "1"]
+  ],
+  tasks: [
+    ["title", "assigned_to", "priority", "due_date"],
+    ["Collect payment from Shiv Medicos", "Riya Sharma", "High", "2026-05-30"]
+  ],
+  schemes: [
+    ["title", "scheme_type", "product", "customer_segment", "rule_text"],
+    ["VitaPlus May Offer", "BOGO", "VitaPlus", "A-Class Retailers", "Buy 10 get 2 free"]
+  ]
+};
+
 const storageKey = "fieldforce-mobile-demo";
 const supabaseUrl = "https://uywrkixlytrcepuextiq.supabase.co";
 const supabaseKey = "sb_publishable_Mu7SoauvKLHuka9L5ZamVQ_8SJHs_1y";
@@ -46,6 +91,7 @@ function switchView(viewId) {
   });
 
   document.getElementById("view-title").textContent = viewTitles[viewId];
+  updateContextAction(viewId);
 
   if (viewId === "customers" || viewId === "products") {
     renderMasterData();
@@ -82,6 +128,14 @@ function switchView(viewId) {
   if (viewId === "command") {
     renderCommandCenter();
   }
+}
+
+function updateContextAction(viewId) {
+  const button = document.getElementById("contextCreateButton");
+  if (!button) return;
+  const config = contextActions[viewId] || { label: "Refresh", action: renderCommandCenter };
+  button.textContent = config.label;
+  button.dataset.contextView = viewId;
 }
 
 function loadMobileState() {
@@ -167,6 +221,26 @@ function adminToast(message) {
   item.textContent = message;
   document.body.appendChild(item);
   setTimeout(() => item.remove(), 2200);
+}
+
+function focusAdminField(fieldId) {
+  const element = document.getElementById(fieldId);
+  if (!element) return;
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => element.focus(), 350);
+}
+
+function downloadCsv(name, rows) {
+  const csv = rows.map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${name}-sample.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function money(value) {
@@ -577,46 +651,70 @@ document.querySelectorAll("[data-refresh-ops]").forEach((button) => {
   });
 });
 
+document.getElementById("contextCreateButton")?.addEventListener("click", () => {
+  const viewId = document.getElementById("contextCreateButton").dataset.contextView || "command";
+  const config = contextActions[viewId];
+  if (config?.target) focusAdminField(config.target);
+  if (config?.action) config.action();
+});
+
+document.querySelectorAll("[data-download-sample]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const key = button.dataset.downloadSample;
+    if (!sampleCsv[key]) return;
+    downloadCsv(key, sampleCsv[key]);
+    adminToast("Sample CSV downloaded");
+  });
+});
+
 document.getElementById("adminSaveProduct")?.addEventListener("click", async () => {
   const name = valueOf("adminProductName");
   if (!name) return adminToast("Product name required");
 
-  await cloudInsert("products", {
-    name,
-    composition: valueOf("adminProductComposition"),
-    category: valueOf("adminProductCategory"),
-    pack: valueOf("adminProductPack"),
-    mrp: numberValue("adminProductMrp"),
-    sale_rate: numberValue("adminProductSaleRate"),
-    scheme: valueOf("adminProductScheme"),
-    stock: numberValue("adminProductStock"),
-    created_by: "Admin"
-  });
-  ["adminProductName", "adminProductComposition", "adminProductCategory", "adminProductPack", "adminProductScheme"].forEach((id) => setValue(id));
-  ["adminProductMrp", "adminProductSaleRate", "adminProductStock"].forEach((id) => setValue(id, "0"));
-  renderMasterData();
-  adminToast("Product saved");
+  try {
+    await cloudInsert("products", {
+      name,
+      composition: valueOf("adminProductComposition"),
+      category: valueOf("adminProductCategory"),
+      pack: valueOf("adminProductPack"),
+      mrp: numberValue("adminProductMrp"),
+      sale_rate: numberValue("adminProductSaleRate"),
+      scheme: valueOf("adminProductScheme"),
+      stock: numberValue("adminProductStock"),
+      created_by: "Admin"
+    });
+    ["adminProductName", "adminProductComposition", "adminProductCategory", "adminProductPack", "adminProductScheme"].forEach((id) => setValue(id));
+    ["adminProductMrp", "adminProductSaleRate", "adminProductStock"].forEach((id) => setValue(id, "0"));
+    renderMasterData();
+    adminToast("Product saved");
+  } catch (error) {
+    adminToast("Product save failed");
+  }
 });
 
 document.getElementById("adminSaveCustomer")?.addEventListener("click", async () => {
   const name = valueOf("adminCustomerName");
   if (!name) return adminToast("Customer name required");
 
-  await cloudInsert("customers", {
-    type: valueOf("adminCustomerType"),
-    name,
-    mobile: valueOf("adminCustomerMobile"),
-    area: valueOf("adminCustomerArea"),
-    customer_class: valueOf("adminCustomerClass"),
-    specialty: valueOf("adminCustomerSpecialty"),
-    outstanding: numberValue("adminCustomerOutstanding"),
-    address: valueOf("adminCustomerState"),
-    created_by: "Admin"
-  });
-  ["adminCustomerName", "adminCustomerMobile", "adminCustomerState", "adminCustomerArea", "adminCustomerSpecialty"].forEach((id) => setValue(id));
-  setValue("adminCustomerOutstanding", "0");
-  renderMasterData();
-  adminToast("Customer saved");
+  try {
+    await cloudInsert("customers", {
+      type: valueOf("adminCustomerType"),
+      name,
+      mobile: valueOf("adminCustomerMobile"),
+      area: valueOf("adminCustomerArea"),
+      customer_class: valueOf("adminCustomerClass"),
+      specialty: valueOf("adminCustomerSpecialty"),
+      outstanding: numberValue("adminCustomerOutstanding"),
+      address: valueOf("adminCustomerState"),
+      created_by: "Admin"
+    });
+    ["adminCustomerName", "adminCustomerMobile", "adminCustomerState", "adminCustomerArea", "adminCustomerSpecialty"].forEach((id) => setValue(id));
+    setValue("adminCustomerOutstanding", "0");
+    renderMasterData();
+    adminToast("Customer saved");
+  } catch (error) {
+    adminToast("Customer save failed");
+  }
 });
 
 document.getElementById("adminSaveTerritory")?.addEventListener("click", async () => {
@@ -624,73 +722,90 @@ document.getElementById("adminSaveTerritory")?.addEventListener("click", async (
   const area = valueOf("territoryArea");
   if (!state || !area) return adminToast("State and area required");
 
-  await cloudInsert("territories", {
-    state,
-    city: valueOf("territoryCity"),
-    area,
-    territory: valueOf("territoryName"),
-    assigned_manager: valueOf("territoryManager")
-  });
-  ["territoryState", "territoryCity", "territoryArea", "territoryName", "territoryManager"].forEach((id) => setValue(id));
-  renderTerritories();
-  adminToast("Area saved");
+  try {
+    await cloudInsert("territories", {
+      state,
+      city: valueOf("territoryCity"),
+      area,
+      territory: valueOf("territoryName"),
+      assigned_manager: valueOf("territoryManager")
+    });
+    ["territoryState", "territoryCity", "territoryArea", "territoryName", "territoryManager"].forEach((id) => setValue(id));
+    renderTerritories();
+    adminToast("Area saved");
+  } catch (error) {
+    adminToast("Area save failed. Run latest SQL.");
+  }
 });
 
 document.getElementById("adminSaveBeat")?.addEventListener("click", async () => {
   const title = valueOf("beatTitle");
   if (!title) return adminToast("Beat title required");
 
-  await cloudInsert("beat_plans", {
-    title,
-    assigned_to: valueOf("beatAssignedTo"),
-    area: valueOf("beatArea"),
-    customer: valueOf("beatCustomer"),
-    planned_date: valueOf("beatDate") || new Date().toISOString().slice(0, 10),
-    sequence_no: numberValue("beatSequence"),
-    status: "Planned"
-  });
-  ["beatTitle", "beatAssignedTo", "beatArea", "beatCustomer", "beatDate"].forEach((id) => setValue(id));
-  setValue("beatSequence", "1");
-  renderBeatPlans();
-  adminToast("Beat plan saved");
+  try {
+    await cloudInsert("beat_plans", {
+      title,
+      assigned_to: valueOf("beatAssignedTo"),
+      area: valueOf("beatArea"),
+      customer: valueOf("beatCustomer"),
+      planned_date: valueOf("beatDate") || new Date().toISOString().slice(0, 10),
+      sequence_no: numberValue("beatSequence") || 1,
+      status: "Planned"
+    });
+    ["beatTitle", "beatAssignedTo", "beatArea", "beatCustomer", "beatDate"].forEach((id) => setValue(id));
+    setValue("beatSequence", "1");
+    renderBeatPlans();
+    adminToast("Beat plan saved");
+  } catch (error) {
+    adminToast("Beat plan save failed. Run latest SQL.");
+  }
 });
 
 document.getElementById("adminSaveTask")?.addEventListener("click", async () => {
   const title = valueOf("taskTitle");
   if (!title) return adminToast("Task title required");
 
-  await cloudInsert("tasks", {
-    title,
-    assigned_to: valueOf("taskAssignedTo"),
-    priority: valueOf("taskPriority"),
-    due_date: valueOf("taskDueDate") || new Date().toISOString().slice(0, 10),
-    status: "Open"
-  });
-  ["taskTitle", "taskAssignedTo", "taskDueDate"].forEach((id) => setValue(id));
-  renderTasks();
-  adminToast("Task saved");
+  try {
+    await cloudInsert("tasks", {
+      title,
+      assigned_to: valueOf("taskAssignedTo"),
+      priority: valueOf("taskPriority"),
+      due_date: valueOf("taskDueDate") || new Date().toISOString().slice(0, 10),
+      status: "Open"
+    });
+    ["taskTitle", "taskAssignedTo", "taskDueDate"].forEach((id) => setValue(id));
+    renderTasks();
+    adminToast("Task saved");
+  } catch (error) {
+    adminToast("Task save failed. Run latest SQL.");
+  }
 });
 
 document.getElementById("adminSaveScheme")?.addEventListener("click", async () => {
   const title = valueOf("schemeTitle");
   if (!title) return adminToast("Scheme title required");
 
-  await cloudInsert("schemes", {
-    title,
-    scheme_type: valueOf("schemeType"),
-    product: valueOf("schemeProduct"),
-    customer_segment: valueOf("schemeSegment"),
-    rule_text: valueOf("schemeRule"),
-    status: "Active"
-  });
-  ["schemeTitle", "schemeProduct"].forEach((id) => setValue(id));
-  setValue("schemeRule", "Buy 10 units, get 2 free");
-  renderSchemes();
-  adminToast("Scheme saved");
+  try {
+    await cloudInsert("schemes", {
+      title,
+      scheme_type: valueOf("schemeType"),
+      product: valueOf("schemeProduct"),
+      customer_segment: valueOf("schemeSegment"),
+      rule_text: valueOf("schemeRule"),
+      status: "Active"
+    });
+    ["schemeTitle", "schemeProduct"].forEach((id) => setValue(id));
+    setValue("schemeRule", "Buy 10 units, get 2 free");
+    renderSchemes();
+    adminToast("Scheme saved");
+  } catch (error) {
+    adminToast("Scheme save failed. Run latest SQL.");
+  }
 });
 
 renderVisits();
 renderProducts();
+updateContextAction("command");
 renderMasterData();
 renderCommandCenter();
 renderCloudSales();

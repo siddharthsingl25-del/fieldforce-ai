@@ -51,7 +51,7 @@
           </div>
           <div class="top-actions">
             <button class="icon-button" title="Notifications">!</button>
-            <button class="primary-action">Create Beat Plan</button>
+            <button class="primary-action" id="contextCreateButton">Open Dashboard</button>
           </div>
         </header>
 
@@ -236,7 +236,13 @@
             <article class="metric"><span>Outstanding</span><strong id="adminOutstandingTotal">₹0</strong><small>Local saved value</small></article>
           </div>
           <section class="panel">
-            <h2>Add Customer / Stockist</h2>
+            <div class="panel-heading">
+              <div>
+                <h2>Add Customer / Stockist</h2>
+                <p>Use form entry for small changes, or CSV import for bulk master data.</p>
+              </div>
+              <button class="primary-action secondary-action" data-download-sample="customers">Sample CSV</button>
+            </div>
             <div class="builder-stack compact-form">
               <label>Type<select id="adminCustomerType"><option>Doctor</option><option>Retailer</option><option>Distributor</option><option>Stockist</option><option>Hospital</option><option>FMCG Outlet</option></select></label>
               <label>Name<input id="adminCustomerName" placeholder="Customer / stockist name" /></label>
@@ -283,7 +289,13 @@
             <article class="metric"><span>Active Schemes</span><strong id="adminSchemeTotal">0</strong><small>Products with scheme</small></article>
           </div>
           <section class="panel">
-            <h2>Add Product</h2>
+            <div class="panel-heading">
+              <div>
+                <h2>Add Product</h2>
+                <p>Add products one by one, or use sample CSV for bulk import preparation.</p>
+              </div>
+              <button class="primary-action secondary-action" data-download-sample="products">Sample CSV</button>
+            </div>
             <div class="builder-stack compact-form">
               <label>Product Name<input id="adminProductName" placeholder="e.g. CardioMax 10mg" /></label>
               <label>Composition<input id="adminProductComposition" placeholder="e.g. Atorvastatin 10mg" /></label>
@@ -325,7 +337,13 @@
             <button class="primary-action" data-refresh-ops="territories">Refresh Data</button>
           </div>
           <section class="panel">
-            <h2>Add Area</h2>
+            <div class="panel-heading">
+              <div>
+                <h2>Add Area</h2>
+                <p>Create state, city, area, and manager mapping for territory setup.</p>
+              </div>
+              <button class="primary-action secondary-action" data-download-sample="territories">Sample CSV</button>
+            </div>
             <div class="builder-stack compact-form">
               <label>State<input id="territoryState" placeholder="e.g. Rajasthan" /></label>
               <label>City<input id="territoryCity" placeholder="e.g. Jaipur" /></label>
@@ -353,7 +371,13 @@
             <button class="primary-action" data-refresh-ops="beatPlans">Refresh Data</button>
           </div>
           <section class="panel">
-            <h2>Create Beat Plan</h2>
+            <div class="panel-heading">
+              <div>
+                <h2>Create Beat Plan</h2>
+                <p>Assign customer visits by user, area, date, and sequence.</p>
+              </div>
+              <button class="primary-action secondary-action" data-download-sample="beatPlans">Sample CSV</button>
+            </div>
             <div class="builder-stack compact-form">
               <label>Title<input id="beatTitle" placeholder="e.g. Jaipur East Morning Beat" /></label>
               <label>Assigned To<input id="beatAssignedTo" placeholder="MR name" /></label>
@@ -392,7 +416,13 @@
             <button class="primary-action" data-refresh-ops="tasks">Refresh Data</button>
           </div>
           <section class="panel">
-            <h2>Create Task</h2>
+            <div class="panel-heading">
+              <div>
+                <h2>Create Task</h2>
+                <p>Assign follow-ups, collection reminders, training, and approvals.</p>
+              </div>
+              <button class="primary-action secondary-action" data-download-sample="tasks">Sample CSV</button>
+            </div>
             <div class="builder-stack compact-form">
               <label>Task Title<input id="taskTitle" placeholder="e.g. Collect payment from Shiv Medicos" /></label>
               <label>Assigned To<input id="taskAssignedTo" placeholder="MR name" /></label>
@@ -467,12 +497,27 @@
             <section class="panel"><h2>Visit Outcomes</h2><div class="master-list" id="reportVisitMix"></div></section>
             <section class="panel"><h2>Top MR Activity</h2><div class="master-list" id="reportUserMix"></div></section>
           </div>
+          <section class="panel">
+            <h2>Bulk Import Procedure</h2>
+            <div class="master-list">
+              <div class="master-item"><strong>1. Download sample CSV</strong><span>Open the module, click Sample CSV, and fill data in the same columns.</span></div>
+              <div class="master-item"><strong>2. Review mandatory fields</strong><span>Products need name. Customers need type and name. Areas need state and area. Beat plans need title.</span></div>
+              <div class="master-item"><strong>3. Current testing method</strong><span>For now, add data through admin forms. CSV upload parser is the next implementation batch.</span></div>
+              <div class="master-item"><strong>4. Cloud verification</strong><span>After save, open Reports or the related module and click Refresh Data.</span></div>
+            </div>
+          </section>
         </section>
 
         <section class="view" id="schemes">
           <div class="rules-layout">
             <section class="panel">
-              <h2>Scheme Builder</h2>
+              <div class="panel-heading">
+                <div>
+                  <h2>Scheme Builder</h2>
+                  <p>Create trade schemes and product offers.</p>
+                </div>
+                <button class="primary-action secondary-action" data-download-sample="schemes">Sample CSV</button>
+              </div>
               <div class="builder-stack">
                 <label>Scheme Title<input id="schemeTitle" placeholder="e.g. VitaPlus May Offer" /></label>
                 <label>Scheme Type<select id="schemeType"><option>Quantity Slab</option><option>BOGO</option><option>Cashback</option><option>Combo Offer</option></select></label>
