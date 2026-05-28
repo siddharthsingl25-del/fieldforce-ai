@@ -25,10 +25,12 @@
           <button class="nav-item" data-view="field">Field App</button>
           <button class="nav-item" data-view="customers">Customers</button>
           <button class="nav-item" data-view="products">Products</button>
+          <button class="nav-item" data-view="territories">Areas</button>
           <button class="nav-item" data-view="beatPlans">Beat Plans</button>
           <button class="nav-item" data-view="tasks">Tasks</button>
           <button class="nav-item" data-view="visits">Visits</button>
           <button class="nav-item" data-view="sales">Sales</button>
+          <button class="nav-item" data-view="reports">Reports</button>
           <button class="nav-item" data-view="schemes">Schemes</button>
           <button class="nav-item" data-view="incentives">Incentives</button>
           <button class="nav-item" data-view="gamify">Gamify</button>
@@ -233,6 +235,20 @@
             <article class="metric"><span>Retailers</span><strong id="adminRetailerTotal">0</strong><small>Trade outlets</small></article>
             <article class="metric"><span>Outstanding</span><strong id="adminOutstandingTotal">₹0</strong><small>Local saved value</small></article>
           </div>
+          <section class="panel">
+            <h2>Add Customer / Stockist</h2>
+            <div class="builder-stack compact-form">
+              <label>Type<select id="adminCustomerType"><option>Doctor</option><option>Retailer</option><option>Distributor</option><option>Stockist</option><option>Hospital</option><option>FMCG Outlet</option></select></label>
+              <label>Name<input id="adminCustomerName" placeholder="Customer / stockist name" /></label>
+              <label>Mobile<input id="adminCustomerMobile" placeholder="Mobile number" /></label>
+              <label>State<input id="adminCustomerState" placeholder="e.g. Rajasthan" /></label>
+              <label>Area / Beat<input id="adminCustomerArea" placeholder="e.g. Jaipur East" /></label>
+              <label>Class<select id="adminCustomerClass"><option>A-Class</option><option>B-Class</option><option>C-Class</option><option>New Lead</option></select></label>
+              <label>Specialty / Channel<input id="adminCustomerSpecialty" placeholder="Cardiologist / General Trade" /></label>
+              <label>Outstanding<input id="adminCustomerOutstanding" type="number" min="0" value="0" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveCustomer">Save Customer</button>
+          </section>
           <div class="table-panel">
             <table>
               <thead>
@@ -266,6 +282,20 @@
             <article class="metric"><span>Avg MRP</span><strong id="adminAvgMrp">₹0</strong><small>Across products</small></article>
             <article class="metric"><span>Active Schemes</span><strong id="adminSchemeTotal">0</strong><small>Products with scheme</small></article>
           </div>
+          <section class="panel">
+            <h2>Add Product</h2>
+            <div class="builder-stack compact-form">
+              <label>Product Name<input id="adminProductName" placeholder="e.g. CardioMax 10mg" /></label>
+              <label>Composition<input id="adminProductComposition" placeholder="e.g. Atorvastatin 10mg" /></label>
+              <label>Category<input id="adminProductCategory" placeholder="Cardiac / FMCG / Wellness" /></label>
+              <label>Pack Size<input id="adminProductPack" placeholder="10x10 tablets" /></label>
+              <label>MRP<input id="adminProductMrp" type="number" min="0" value="0" /></label>
+              <label>Sale Rate<input id="adminProductSaleRate" type="number" min="0" value="0" /></label>
+              <label>Scheme<input id="adminProductScheme" placeholder="Buy 10 get 2 free" /></label>
+              <label>Stock<input id="adminProductStock" type="number" min="0" value="0" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveProduct">Save Product</button>
+          </section>
           <div class="table-panel">
             <table>
               <thead>
@@ -285,6 +315,34 @@
           </div>
         </section>
 
+        <section class="view" id="territories">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Territory setup</p>
+              <h2>State / Area / Territory Master</h2>
+              <p id="territorySyncStatus">Loading cloud areas...</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="territories">Refresh Data</button>
+          </div>
+          <section class="panel">
+            <h2>Add Area</h2>
+            <div class="builder-stack compact-form">
+              <label>State<input id="territoryState" placeholder="e.g. Rajasthan" /></label>
+              <label>City<input id="territoryCity" placeholder="e.g. Jaipur" /></label>
+              <label>Area<input id="territoryArea" placeholder="e.g. Jaipur East" /></label>
+              <label>Territory<input id="territoryName" placeholder="e.g. Jaipur East-01" /></label>
+              <label>Assigned Manager<input id="territoryManager" placeholder="ASM / RM name" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveTerritory">Save Area</button>
+          </section>
+          <div class="table-panel">
+            <table>
+              <thead><tr><th>State</th><th>City</th><th>Area</th><th>Territory</th><th>Manager</th><th>Status</th></tr></thead>
+              <tbody id="adminTerritoryRows"></tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="view" id="beatPlans">
           <div class="section-header">
             <div>
@@ -294,6 +352,18 @@
             </div>
             <button class="primary-action" data-refresh-ops="beatPlans">Refresh Data</button>
           </div>
+          <section class="panel">
+            <h2>Create Beat Plan</h2>
+            <div class="builder-stack compact-form">
+              <label>Title<input id="beatTitle" placeholder="e.g. Jaipur East Morning Beat" /></label>
+              <label>Assigned To<input id="beatAssignedTo" placeholder="MR name" /></label>
+              <label>Area<input id="beatArea" placeholder="Area / beat" /></label>
+              <label>Customer<input id="beatCustomer" placeholder="Customer name" /></label>
+              <label>Date<input id="beatDate" type="date" /></label>
+              <label>Sequence<input id="beatSequence" type="number" min="1" value="1" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveBeat">Save Beat Plan</button>
+          </section>
           <div class="table-panel">
             <table>
               <thead>
@@ -321,6 +391,16 @@
             </div>
             <button class="primary-action" data-refresh-ops="tasks">Refresh Data</button>
           </div>
+          <section class="panel">
+            <h2>Create Task</h2>
+            <div class="builder-stack compact-form">
+              <label>Task Title<input id="taskTitle" placeholder="e.g. Collect payment from Shiv Medicos" /></label>
+              <label>Assigned To<input id="taskAssignedTo" placeholder="MR name" /></label>
+              <label>Priority<select id="taskPriority"><option>Normal</option><option>High</option><option>Urgent</option></select></label>
+              <label>Due Date<input id="taskDueDate" type="date" /></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveTask">Save Task</button>
+          </section>
           <div class="table-panel">
             <table>
               <thead>
@@ -367,22 +447,44 @@
           </section>
         </section>
 
+        <section class="view" id="reports">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Management reports</p>
+              <h2>Daily Cloud Reports</h2>
+              <p id="reportSyncStatus">Loading cloud reports...</p>
+            </div>
+            <button class="primary-action" data-refresh-ops="reports">Refresh Reports</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Attendance</span><strong id="reportAttendance">0</strong><small>Check-ins</small></article>
+            <article class="metric"><span>Visits</span><strong id="reportVisits">0</strong><small>DCR entries</small></article>
+            <article class="metric"><span>Orders</span><strong id="reportOrders">0</strong><small>Booked orders</small></article>
+            <article class="metric"><span>Sales Value</span><strong id="reportSales">₹0</strong><small>Cloud order value</small></article>
+          </div>
+          <div class="dashboard-grid three">
+            <section class="panel"><h2>Customer Mix</h2><div class="master-list" id="reportCustomerMix"></div></section>
+            <section class="panel"><h2>Visit Outcomes</h2><div class="master-list" id="reportVisitMix"></div></section>
+            <section class="panel"><h2>Top MR Activity</h2><div class="master-list" id="reportUserMix"></div></section>
+          </div>
+        </section>
+
         <section class="view" id="schemes">
           <div class="rules-layout">
             <section class="panel">
               <h2>Scheme Builder</h2>
               <div class="builder-stack">
-                <label>Scheme Type<select><option>Quantity Slab</option><option>BOGO</option><option>Cashback</option></select></label>
-                <label>Customer Segment<select><option>A-Class Retailers</option><option>Distributors</option><option>Doctors</option></select></label>
-                <label>Rule<input value="Buy 10 units, get 2 free" /></label>
-                <button class="primary-action">Simulate Scheme</button>
+                <label>Scheme Title<input id="schemeTitle" placeholder="e.g. VitaPlus May Offer" /></label>
+                <label>Scheme Type<select id="schemeType"><option>Quantity Slab</option><option>BOGO</option><option>Cashback</option><option>Combo Offer</option></select></label>
+                <label>Product<input id="schemeProduct" placeholder="Product name" /></label>
+                <label>Customer Segment<select id="schemeSegment"><option>A-Class Retailers</option><option>Distributors</option><option>Doctors</option><option>All Customers</option></select></label>
+                <label>Rule<input id="schemeRule" value="Buy 10 units, get 2 free" /></label>
+                <button class="primary-action" id="adminSaveScheme">Save Scheme</button>
               </div>
             </section>
             <section class="panel">
-              <h2>Rule Preview</h2>
-              <div class="rule-preview">
-                Applies in North Zone for A-Class retailers from 1 Jun to 30 Jun. Estimated lift: 14%. Estimated claim liability: ₹7.8L.
-              </div>
+              <h2>Active Schemes</h2>
+              <div class="master-list" id="adminSchemeRows"></div>
             </section>
           </div>
         </section>

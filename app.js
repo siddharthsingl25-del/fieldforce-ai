@@ -3,10 +3,12 @@ const viewTitles = {
   field: "Mobile Field App",
   customers: "Customer Master",
   products: "Product Master",
+  territories: "Area Master",
   beatPlans: "Beat Plans",
   tasks: "Tasks & Follow-ups",
   visits: "Visit Management",
   sales: "Sales & Order Management",
+  reports: "Reports",
   schemes: "Scheme Management",
   incentives: "Incentive Engine",
   gamify: "Gamification System",
@@ -61,8 +63,20 @@ function switchView(viewId) {
     renderTasks();
   }
 
+  if (viewId === "territories") {
+    renderTerritories();
+  }
+
   if (viewId === "sales") {
     renderCloudSales();
+  }
+
+  if (viewId === "schemes") {
+    renderSchemes();
+  }
+
+  if (viewId === "reports") {
+    renderReports();
   }
 
   if (viewId === "command") {
@@ -119,6 +133,40 @@ async function cloudSelect(table) {
   return requestJson(`${supabaseUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
     headers: cloudHeaders()
   });
+}
+
+async function cloudInsert(table, payload) {
+  if (!cloudEnabled) return null;
+
+  return requestJson(`${supabaseUrl}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { ...cloudHeaders(), Prefer: "return=representation" },
+    body: JSON.stringify(payload)
+  });
+}
+
+function setValue(id, value = "") {
+  const element = document.getElementById(id);
+  if (element) element.value = value;
+}
+
+function valueOf(id) {
+  return document.getElementById(id)?.value?.trim() || "";
+}
+
+function numberValue(id) {
+  return Number(document.getElementById(id)?.value || 0);
+}
+
+function adminToast(message) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
+
+  const item = document.createElement("div");
+  item.className = "toast";
+  item.textContent = message;
+  document.body.appendChild(item);
+  setTimeout(() => item.remove(), 2200);
 }
 
 function money(value) {
@@ -333,6 +381,34 @@ function renderCommandCenter() {
     });
 }
 
+function renderTerritories() {
+  const rows = document.getElementById("adminTerritoryRows");
+  const status = document.getElementById("territorySyncStatus");
+  if (!rows) return;
+  if (status) status.textContent = "Refreshing cloud areas...";
+
+  cloudSelect("territories")
+    .then((items) => {
+      if (status) status.textContent = `Cloud synced: ${items.length} areas`;
+      rows.innerHTML = items.length
+        ? items.map((item) => `
+          <tr>
+            <td>${item.state || "-"}</td>
+            <td>${item.city || "-"}</td>
+            <td><strong>${item.area || "-"}</strong></td>
+            <td>${item.territory || "-"}</td>
+            <td>${item.assigned_manager || "-"}</td>
+            <td><span class="tag">${item.status || "Active"}</span></td>
+          </tr>
+        `).join("")
+        : `<tr><td colspan="6"><strong>No areas yet.</strong> Add state/area from the form above.</td></tr>`;
+    })
+    .catch(() => {
+      if (status) status.textContent = "Cloud areas failed to load.";
+      rows.innerHTML = `<tr><td colspan="6">Cloud areas could not be loaded.</td></tr>`;
+    });
+}
+
 function renderBeatPlans() {
   const rows = document.getElementById("adminBeatRows");
   const status = document.getElementById("beatPlanSyncStatus");
@@ -397,6 +473,71 @@ function renderTasks() {
     });
 }
 
+function renderSchemes() {
+  const list = document.getElementById("adminSchemeRows");
+  if (!list) return;
+
+  cloudSelect("schemes")
+    .then((schemes) => {
+      list.innerHTML = schemes.length
+        ? schemes.map((scheme) => `
+          <div class="master-item">
+            <strong>${scheme.title || "-"}</strong>
+            <span>${scheme.scheme_type || "Scheme"} | ${scheme.product || "All products"} | ${scheme.customer_segment || "All"}</span>
+            <span>${scheme.rule_text || "-"}</span>
+          </div>
+        `).join("")
+        : `<div class="master-item"><strong>No schemes yet</strong><span>Create a scheme from the builder.</span></div>`;
+    })
+    .catch(() => {
+      list.innerHTML = `<div class="master-item"><strong>Cloud schemes failed to load</strong></div>`;
+    });
+}
+
+function groupCount(items, key) {
+  return items.reduce((acc, item) => {
+    const value = item[key] || "Unknown";
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function renderGroup(targetId, groups) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const entries = Object.entries(groups);
+  target.innerHTML = entries.length
+    ? entries.map(([label, count]) => `<div class="master-item"><strong>${label}</strong><span>${count}</span></div>`).join("")
+    : `<div class="master-item"><strong>No data yet</strong></div>`;
+}
+
+function renderReports() {
+  const status = document.getElementById("reportSyncStatus");
+  if (status) status.textContent = "Refreshing cloud reports...";
+
+  Promise.all([
+    cloudSelect("attendance"),
+    cloudSelect("visits"),
+    cloudSelect("orders"),
+    cloudSelect("customers"),
+    cloudSelect("products")
+  ])
+    .then(([attendance, visits, orders, customers, products]) => {
+      const sales = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      document.getElementById("reportAttendance").textContent = attendance.length;
+      document.getElementById("reportVisits").textContent = visits.length;
+      document.getElementById("reportOrders").textContent = orders.length;
+      document.getElementById("reportSales").textContent = money(sales);
+      renderGroup("reportCustomerMix", groupCount(customers, "type"));
+      renderGroup("reportVisitMix", groupCount(visits, "outcome"));
+      renderGroup("reportUserMix", groupCount([...visits, ...orders, ...attendance], "user_name"));
+      if (status) status.textContent = `Cloud synced: ${customers.length} customers, ${products.length} products`;
+    })
+    .catch(() => {
+      if (status) status.textContent = "Cloud reports failed to load.";
+    });
+}
+
 async function renderMasterData() {
   const state = loadMobileState();
   const customerStatus = document.getElementById("customerSyncStatus");
@@ -431,7 +572,121 @@ document.querySelectorAll("[data-refresh-ops]").forEach((button) => {
   button.addEventListener("click", () => {
     if (button.dataset.refreshOps === "beatPlans") renderBeatPlans();
     if (button.dataset.refreshOps === "tasks") renderTasks();
+    if (button.dataset.refreshOps === "territories") renderTerritories();
+    if (button.dataset.refreshOps === "reports") renderReports();
   });
+});
+
+document.getElementById("adminSaveProduct")?.addEventListener("click", async () => {
+  const name = valueOf("adminProductName");
+  if (!name) return adminToast("Product name required");
+
+  await cloudInsert("products", {
+    name,
+    composition: valueOf("adminProductComposition"),
+    category: valueOf("adminProductCategory"),
+    pack: valueOf("adminProductPack"),
+    mrp: numberValue("adminProductMrp"),
+    sale_rate: numberValue("adminProductSaleRate"),
+    scheme: valueOf("adminProductScheme"),
+    stock: numberValue("adminProductStock"),
+    created_by: "Admin"
+  });
+  ["adminProductName", "adminProductComposition", "adminProductCategory", "adminProductPack", "adminProductScheme"].forEach((id) => setValue(id));
+  ["adminProductMrp", "adminProductSaleRate", "adminProductStock"].forEach((id) => setValue(id, "0"));
+  renderMasterData();
+  adminToast("Product saved");
+});
+
+document.getElementById("adminSaveCustomer")?.addEventListener("click", async () => {
+  const name = valueOf("adminCustomerName");
+  if (!name) return adminToast("Customer name required");
+
+  await cloudInsert("customers", {
+    type: valueOf("adminCustomerType"),
+    name,
+    mobile: valueOf("adminCustomerMobile"),
+    area: valueOf("adminCustomerArea"),
+    customer_class: valueOf("adminCustomerClass"),
+    specialty: valueOf("adminCustomerSpecialty"),
+    outstanding: numberValue("adminCustomerOutstanding"),
+    address: valueOf("adminCustomerState"),
+    created_by: "Admin"
+  });
+  ["adminCustomerName", "adminCustomerMobile", "adminCustomerState", "adminCustomerArea", "adminCustomerSpecialty"].forEach((id) => setValue(id));
+  setValue("adminCustomerOutstanding", "0");
+  renderMasterData();
+  adminToast("Customer saved");
+});
+
+document.getElementById("adminSaveTerritory")?.addEventListener("click", async () => {
+  const state = valueOf("territoryState");
+  const area = valueOf("territoryArea");
+  if (!state || !area) return adminToast("State and area required");
+
+  await cloudInsert("territories", {
+    state,
+    city: valueOf("territoryCity"),
+    area,
+    territory: valueOf("territoryName"),
+    assigned_manager: valueOf("territoryManager")
+  });
+  ["territoryState", "territoryCity", "territoryArea", "territoryName", "territoryManager"].forEach((id) => setValue(id));
+  renderTerritories();
+  adminToast("Area saved");
+});
+
+document.getElementById("adminSaveBeat")?.addEventListener("click", async () => {
+  const title = valueOf("beatTitle");
+  if (!title) return adminToast("Beat title required");
+
+  await cloudInsert("beat_plans", {
+    title,
+    assigned_to: valueOf("beatAssignedTo"),
+    area: valueOf("beatArea"),
+    customer: valueOf("beatCustomer"),
+    planned_date: valueOf("beatDate") || new Date().toISOString().slice(0, 10),
+    sequence_no: numberValue("beatSequence"),
+    status: "Planned"
+  });
+  ["beatTitle", "beatAssignedTo", "beatArea", "beatCustomer", "beatDate"].forEach((id) => setValue(id));
+  setValue("beatSequence", "1");
+  renderBeatPlans();
+  adminToast("Beat plan saved");
+});
+
+document.getElementById("adminSaveTask")?.addEventListener("click", async () => {
+  const title = valueOf("taskTitle");
+  if (!title) return adminToast("Task title required");
+
+  await cloudInsert("tasks", {
+    title,
+    assigned_to: valueOf("taskAssignedTo"),
+    priority: valueOf("taskPriority"),
+    due_date: valueOf("taskDueDate") || new Date().toISOString().slice(0, 10),
+    status: "Open"
+  });
+  ["taskTitle", "taskAssignedTo", "taskDueDate"].forEach((id) => setValue(id));
+  renderTasks();
+  adminToast("Task saved");
+});
+
+document.getElementById("adminSaveScheme")?.addEventListener("click", async () => {
+  const title = valueOf("schemeTitle");
+  if (!title) return adminToast("Scheme title required");
+
+  await cloudInsert("schemes", {
+    title,
+    scheme_type: valueOf("schemeType"),
+    product: valueOf("schemeProduct"),
+    customer_segment: valueOf("schemeSegment"),
+    rule_text: valueOf("schemeRule"),
+    status: "Active"
+  });
+  ["schemeTitle", "schemeProduct"].forEach((id) => setValue(id));
+  setValue("schemeRule", "Buy 10 units, get 2 free");
+  renderSchemes();
+  adminToast("Scheme saved");
 });
 
 renderVisits();
@@ -441,3 +696,6 @@ renderCommandCenter();
 renderCloudSales();
 renderBeatPlans();
 renderTasks();
+renderTerritories();
+renderSchemes();
+renderReports();

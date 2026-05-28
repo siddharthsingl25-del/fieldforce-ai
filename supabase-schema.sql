@@ -94,6 +94,17 @@ create table if not exists public.schemes (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.territories (
+  id uuid primary key default gen_random_uuid(),
+  state text not null,
+  city text,
+  area text not null,
+  territory text,
+  assigned_manager text,
+  status text default 'Active',
+  created_at timestamptz not null default now()
+);
+
 alter table public.customers enable row level security;
 alter table public.products enable row level security;
 alter table public.visits enable row level security;
@@ -102,6 +113,7 @@ alter table public.attendance enable row level security;
 alter table public.beat_plans enable row level security;
 alter table public.tasks enable row level security;
 alter table public.schemes enable row level security;
+alter table public.territories enable row level security;
 
 drop policy if exists "testing read customers" on public.customers;
 drop policy if exists "testing insert customers" on public.customers;
@@ -121,6 +133,8 @@ drop policy if exists "testing insert tasks" on public.tasks;
 drop policy if exists "testing update tasks" on public.tasks;
 drop policy if exists "testing read schemes" on public.schemes;
 drop policy if exists "testing insert schemes" on public.schemes;
+drop policy if exists "testing read territories" on public.territories;
+drop policy if exists "testing insert territories" on public.territories;
 
 create policy "testing read customers" on public.customers for select to anon using (true);
 create policy "testing insert customers" on public.customers for insert to anon with check (true);
@@ -147,3 +161,6 @@ create policy "testing update tasks" on public.tasks for update to anon using (t
 
 create policy "testing read schemes" on public.schemes for select to anon using (true);
 create policy "testing insert schemes" on public.schemes for insert to anon with check (true);
+
+create policy "testing read territories" on public.territories for select to anon using (true);
+create policy "testing insert territories" on public.territories for insert to anon with check (true);

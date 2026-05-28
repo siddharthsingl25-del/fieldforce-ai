@@ -115,6 +115,19 @@ button {
   background: #35c0a1;
 }
 
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  border-radius: 8px;
+  background: #101820;
+  color: white;
+  padding: 13px 16px;
+  box-shadow: var(--shadow);
+  font-weight: 800;
+}
+
 .main {
   padding: 28px;
   min-width: 0;
@@ -569,11 +582,42 @@ th {
   gap: 16px;
 }
 
+.compact-form {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
 .builder-stack label {
   display: grid;
   gap: 8px;
   color: var(--muted);
   font-weight: 800;
+}
+
+.admin-save {
+  min-width: 160px;
+}
+
+.master-list {
+  display: grid;
+  gap: 10px;
+}
+
+.master-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 12px;
+}
+
+.master-item strong,
+.master-item span {
+  display: block;
+}
+
+.master-item span {
+  color: var(--muted);
+  margin-top: 4px;
 }
 
 .incentive-grid {
@@ -737,6 +781,10 @@ th {
   }
 
   .product-row {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-form {
     grid-template-columns: 1fr;
   }
 }
