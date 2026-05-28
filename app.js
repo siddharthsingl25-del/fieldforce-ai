@@ -192,6 +192,14 @@ async function cloudSelect(table) {
   });
 }
 
+async function optionalCloudSelect(table) {
+  try {
+    return (await cloudSelect(table)) || [];
+  } catch {
+    return [];
+  }
+}
+
 async function cloudInsert(table, payload) {
   if (!cloudEnabled) return null;
 
@@ -607,21 +615,47 @@ function renderReports() {
     cloudSelect("visits"),
     cloudSelect("orders"),
     cloudSelect("customers"),
-    cloudSelect("products")
+    cloudSelect("products"),
+    optionalCloudSelect("outlet_sessions")
   ])
-    .then(([attendance, visits, orders, customers, products]) => {
+    .then(([attendance, visits, orders, customers, products, outletSessions]) => {
       const sales = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const outletMinutes = outletSessions.reduce((sum, session) => sum + Number(session.duration_minutes || 0), 0);
+      const outletKm = outletSessions.reduce((sum, session) => sum + Number(session.km_travelled || 0), 0);
+      const outletRows = document.getElementById("reportOutletRows");
       document.getElementById("reportAttendance").textContent = attendance.length;
       document.getElementById("reportVisits").textContent = visits.length;
       document.getElementById("reportOrders").textContent = orders.length;
       document.getElementById("reportSales").textContent = money(sales);
+      document.getElementById("reportOutletTime").textContent = `${outletMinutes} min`;
+      document.getElementById("reportKm").textContent = `${outletKm.toFixed(1)} km`;
       renderGroup("reportCustomerMix", groupCount(customers, "type"));
       renderGroup("reportVisitMix", groupCount(visits, "outcome"));
-      renderGroup("reportUserMix", groupCount([...visits, ...orders, ...attendance], "user_name"));
-      if (status) status.textContent = `Cloud synced: ${customers.length} customers, ${products.length} products`;
+      renderGroup("reportUserMix", groupCount([...visits, ...orders, ...attendance, ...outletSessions], "user_name"));
+      if (outletRows) {
+        outletRows.innerHTML = outletSessions.length
+          ? outletSessions
+              .slice(0, 30)
+              .map((session) => `
+                <tr>
+                  <td>${session.user_name || "-"}</td>
+                  <td><strong>${session.customer || "-"}</strong><br><small>${session.area || "-"}</small></td>
+                  <td>${session.check_in_time || "-"}</td>
+                  <td>${session.check_out_time || "-"}</td>
+                  <td>${session.duration_minutes || 0} min</td>
+                  <td>${Number(session.km_travelled || 0).toFixed(1)}</td>
+                  <td>${session.outcome || "-"}</td>
+                </tr>
+              `)
+              .join("")
+          : `<tr><td colspan="7"><strong>No outlet check-outs yet.</strong> Field user should Start Outlet Check-In and Check Out Outlet from mobile.</td></tr>`;
+      }
+      if (status) status.textContent = `Cloud synced: ${customers.length} customers, ${products.length} products, ${outletSessions.length} outlet sessions`;
     })
     .catch(() => {
       if (status) status.textContent = "Cloud reports failed to load.";
+      const outletRows = document.getElementById("reportOutletRows");
+      if (outletRows) outletRows.innerHTML = `<tr><td colspan="7">Cloud outlet report failed to load.</td></tr>`;
     });
 }
 

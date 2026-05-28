@@ -509,12 +509,33 @@
             <article class="metric"><span>Visits</span><strong id="reportVisits">0</strong><small>DCR entries</small></article>
             <article class="metric"><span>Orders</span><strong id="reportOrders">0</strong><small>Booked orders</small></article>
             <article class="metric"><span>Sales Value</span><strong id="reportSales">₹0</strong><small>Cloud order value</small></article>
+            <article class="metric"><span>Outlet Time</span><strong id="reportOutletTime">0 min</strong><small>Checked-out duration</small></article>
+            <article class="metric"><span>KM Travelled</span><strong id="reportKm">0 km</strong><small>Field movement</small></article>
           </div>
           <div class="dashboard-grid three">
             <section class="panel"><h2>Customer Mix</h2><div class="master-list" id="reportCustomerMix"></div></section>
             <section class="panel"><h2>Visit Outcomes</h2><div class="master-list" id="reportVisitMix"></div></section>
             <section class="panel"><h2>Top MR Activity</h2><div class="master-list" id="reportUserMix"></div></section>
           </div>
+          <section class="panel">
+            <h2>Outlet Timing & KM</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>MR</th>
+                    <th>Outlet</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Time</th>
+                    <th>KM</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody id="reportOutletRows"></tbody>
+              </table>
+            </div>
+          </section>
           <section class="panel">
             <h2>Bulk Import Procedure</h2>
             <div class="master-list">

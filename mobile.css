@@ -244,6 +244,33 @@ p {
   font-size: 0.82rem;
 }
 
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.status-grid div {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f6faf9;
+  padding: 12px;
+}
+
+.status-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.status-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 1.15rem;
+}
+
 .action-list,
 .visit-actions,
 .badge-list {
@@ -350,6 +377,11 @@ textarea {
 .visit-actions button:first-child {
   grid-column: 1 / -1;
   background: var(--dark);
+  color: white;
+}
+
+.visit-actions button:nth-child(2) {
+  background: var(--green);
   color: white;
 }
 

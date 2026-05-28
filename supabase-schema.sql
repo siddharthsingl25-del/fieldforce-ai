@@ -37,6 +37,21 @@ create table if not exists public.visits (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.outlet_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_name text not null,
+  role text,
+  customer text not null,
+  area text,
+  check_in_time text,
+  check_out_time text,
+  duration_minutes integer default 0,
+  km_travelled numeric default 0,
+  outcome text default 'Productive Call',
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   customer text not null,
@@ -108,6 +123,7 @@ create table if not exists public.territories (
 alter table public.customers enable row level security;
 alter table public.products enable row level security;
 alter table public.visits enable row level security;
+alter table public.outlet_sessions enable row level security;
 alter table public.orders enable row level security;
 alter table public.attendance enable row level security;
 alter table public.beat_plans enable row level security;
@@ -121,6 +137,8 @@ drop policy if exists "testing read products" on public.products;
 drop policy if exists "testing insert products" on public.products;
 drop policy if exists "testing read visits" on public.visits;
 drop policy if exists "testing insert visits" on public.visits;
+drop policy if exists "testing read outlet sessions" on public.outlet_sessions;
+drop policy if exists "testing insert outlet sessions" on public.outlet_sessions;
 drop policy if exists "testing read orders" on public.orders;
 drop policy if exists "testing insert orders" on public.orders;
 drop policy if exists "testing read attendance" on public.attendance;
@@ -144,6 +162,9 @@ create policy "testing insert products" on public.products for insert to anon wi
 
 create policy "testing read visits" on public.visits for select to anon using (true);
 create policy "testing insert visits" on public.visits for insert to anon with check (true);
+
+create policy "testing read outlet sessions" on public.outlet_sessions for select to anon using (true);
+create policy "testing insert outlet sessions" on public.outlet_sessions for insert to anon with check (true);
 
 create policy "testing read orders" on public.orders for select to anon using (true);
 create policy "testing insert orders" on public.orders for insert to anon with check (true);

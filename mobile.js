@@ -22,7 +22,8 @@ const defaultState = {
   visits: [],
   orders: [],
   customers: [],
-  products: []
+  products: [],
+  outletSessions: []
 };
 
 function loadState() {
@@ -36,6 +37,8 @@ function saveState() {
 
 let state = loadState();
 let orderSearch = "";
+let activeOutletSession = null;
+let outletTimer = null;
 
 function cloudHeaders(extra = {}) {
   return {
@@ -55,6 +58,14 @@ async function cloudSelect(table) {
 
   if (!response.ok) throw new Error(`Cloud select failed: ${table}`);
   return response.json();
+}
+
+async function optionalCloudSelect(table) {
+  try {
+    return (await cloudSelect(table)) || [];
+  } catch {
+    return [];
+  }
 }
 
 async function cloudInsert(table, payload) {
@@ -80,6 +91,10 @@ function money(value) {
 
 function currentTime() {
   return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+}
+
+function minutesBetween(start, end = new Date()) {
+  return Math.max(0, Math.round((end.getTime() - new Date(start).getTime()) / 60000));
 }
 
 function showMobileView(viewId) {
@@ -114,6 +129,10 @@ function renderHistory() {
       title: visit.outcome,
       text: `${visit.customer} | ${visit.time}`
     })),
+    ...(state.outletSessions || []).map((session) => ({
+      title: `Outlet ${session.durationMinutes || session.duration_minutes || 0} min`,
+      text: `${session.customer} | ${session.kmTravelled || session.km_travelled || 0} km`
+    })),
     ...state.orders.map((order) => ({
       title: `Order booked ${money(order.total)}`,
       text: `${order.customer} | ${order.time}`
@@ -124,6 +143,27 @@ function renderHistory() {
   document.getElementById("historyList").innerHTML = history.length
     ? history.map((item) => `<div class="history-item"><strong>${item.title}</strong><span>${item.text}</span></div>`).join("")
     : `<div class="history-item"><strong>No activity saved yet</strong><span>Submit a visit or book an order.</span></div>`;
+}
+
+function renderOutletStats() {
+  const status = document.getElementById("outletSessionStatus");
+  const minutes = document.getElementById("outletMinutes");
+  const kmTotal = document.getElementById("outletKmTotal");
+  if (!status || !minutes || !kmTotal) return;
+
+  const sessions = state.outletSessions || [];
+  const totalKm = sessions.reduce((sum, item) => sum + Number(item.kmTravelled || item.km_travelled || 0), 0);
+  kmTotal.textContent = `${totalKm.toFixed(1)} km`;
+
+  if (!activeOutletSession) {
+    status.textContent = "No active outlet";
+    minutes.textContent = "0 min";
+    return;
+  }
+
+  const elapsed = minutesBetween(activeOutletSession.startedAt);
+  status.textContent = `${activeOutletSession.customer} active`;
+  minutes.textContent = `${elapsed} min`;
 }
 
 function renderCustomers() {
@@ -328,11 +368,12 @@ async function syncFromCloud() {
   if (!cloudEnabled) return;
 
   try {
-    const [customers, products, visits, orders] = await Promise.all([
+    const [customers, products, visits, orders, outletSessions] = await Promise.all([
       cloudSelect("customers"),
       cloudSelect("products"),
       cloudSelect("visits"),
-      cloudSelect("orders")
+      cloudSelect("orders"),
+      optionalCloudSelect("outlet_sessions")
     ]);
     const [beatPlans, tasks, schemes] = await Promise.all([
       cloudSelect("beat_plans"),
@@ -359,9 +400,20 @@ async function syncFromCloud() {
       total: order.total,
       time: order.order_time || new Date(order.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
     }));
+    state.outletSessions = outletSessions.map((session) => ({
+      customer: session.customer,
+      area: session.area,
+      checkInTime: session.check_in_time,
+      checkOutTime: session.check_out_time,
+      durationMinutes: session.duration_minutes,
+      kmTravelled: session.km_travelled,
+      outcome: session.outcome,
+      notes: session.notes
+    }));
 
     saveState();
     renderHistory();
+    renderOutletStats();
     renderCustomers();
     renderProducts();
     renderCustomerDropdowns();
@@ -405,6 +457,72 @@ document.getElementById("checkButton").addEventListener("click", () => {
   })
     .then(() => toast(`${status} saved to cloud`))
     .catch(() => toast(state.checkedIn ? "Attendance checked in" : "Checked out"));
+});
+
+document.getElementById("startOutletButton")?.addEventListener("click", () => {
+  if (!state.checkedIn) {
+    toast("Pehle GPS attendance check-in karo");
+    return;
+  }
+
+  const customerName = document.getElementById("visitCustomerSelect")?.value || "Shiv Medicos";
+  const customer = state.customers.find((item) => item.name === customerName);
+  activeOutletSession = {
+    customer: customerName,
+    area: customer?.area || "",
+    startedAt: new Date().toISOString(),
+    checkInTime: currentTime()
+  };
+
+  if (outletTimer) clearInterval(outletTimer);
+  outletTimer = setInterval(renderOutletStats, 30000);
+  renderOutletStats();
+  toast("Outlet check-in started");
+});
+
+document.getElementById("checkoutOutletButton")?.addEventListener("click", async () => {
+  if (!activeOutletSession) {
+    toast("Pehle outlet check-in start karo");
+    return;
+  }
+
+  const durationMinutes = minutesBetween(activeOutletSession.startedAt);
+  const kmTravelled = Number(document.getElementById("outletKmInput")?.value || 0);
+  const session = {
+    customer: activeOutletSession.customer,
+    area: activeOutletSession.area,
+    checkInTime: activeOutletSession.checkInTime,
+    checkOutTime: currentTime(),
+    durationMinutes,
+    kmTravelled,
+    outcome: document.getElementById("visitOutcome").value,
+    notes: document.getElementById("visitNotes").value.trim()
+  };
+
+  state.outletSessions = [...(state.outletSessions || []), session];
+  activeOutletSession = null;
+  if (outletTimer) clearInterval(outletTimer);
+  saveState();
+  renderOutletStats();
+  renderHistory();
+
+  try {
+    await cloudInsert("outlet_sessions", {
+      user_name: state.name,
+      role: state.role,
+      customer: session.customer,
+      area: session.area,
+      check_in_time: session.checkInTime,
+      check_out_time: session.checkOutTime,
+      duration_minutes: session.durationMinutes,
+      km_travelled: session.kmTravelled,
+      outcome: session.outcome,
+      notes: session.notes
+    });
+    toast("Outlet checkout saved to cloud");
+  } catch {
+    toast("Outlet checkout saved locally");
+  }
 });
 
 document.getElementById("submitVisitButton").addEventListener("click", async () => {
@@ -560,6 +678,7 @@ document.getElementById("orderProductSearch")?.addEventListener("input", (event)
 renderUser();
 renderCheckIn();
 renderHistory();
+renderOutletStats();
 renderCustomers();
 renderProducts();
 renderCustomerDropdowns();

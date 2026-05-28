@@ -113,10 +113,26 @@
           <h2 id="selectedVisitCustomerName">Select Customer</h2>
           <p id="selectedVisitCustomerMeta">Choose customer from the dropdown before visit submission.</p>
           <div class="visit-actions">
-            <button>Start Visit</button>
+            <button id="startOutletButton">Start Outlet Check-In</button>
+            <button id="checkoutOutletButton">Check Out Outlet</button>
             <button>Voice Note</button>
             <button>Upload Photo</button>
           </div>
+        </section>
+
+        <section class="mobile-panel compact">
+          <div class="panel-title">
+            <h2>Outlet Timer</h2>
+            <span id="outletSessionStatus">No active outlet</span>
+          </div>
+          <div class="status-grid">
+            <div><span>Time at outlet</span><strong id="outletMinutes">0 min</strong></div>
+            <div><span>Today KM</span><strong id="outletKmTotal">0 km</strong></div>
+          </div>
+          <label>
+            KM from last outlet
+            <input id="outletKmInput" type="number" min="0" step="0.1" value="0" />
+          </label>
         </section>
 
         <section class="mobile-panel">
