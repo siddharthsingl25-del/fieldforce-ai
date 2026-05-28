@@ -38,6 +38,7 @@ This project includes `vercel.json`.
 
 - `/` opens the mobile app.
 - `/admin` opens the admin dashboard prototype.
+- `/admin.html` also opens the admin dashboard prototype.
 
 ## Fast update workflow
 

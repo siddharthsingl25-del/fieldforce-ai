@@ -3,12 +3,8 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/mobile.html"
-    },
-    {
       "source": "/admin",
-      "destination": "/index.html"
+      "destination": "/admin.html"
     }
   ],
   "headers": [

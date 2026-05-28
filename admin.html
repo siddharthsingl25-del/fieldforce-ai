@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FieldForce AI - Pharma + FMCG Platform</title>
+    <meta name="theme-color" content="#168765" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand-mark">FF</div>
+          <div>
+            <strong>FieldForce AI</strong>
+            <span>Pharma + FMCG OS</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" data-view="command">Command</button>
+          <button class="nav-item" data-view="field">Field App</button>
+          <button class="nav-item" data-view="visits">Visits</button>
+          <button class="nav-item" data-view="sales">Sales</button>
+          <button class="nav-item" data-view="schemes">Schemes</button>
+          <button class="nav-item" data-view="incentives">Incentives</button>
+          <button class="nav-item" data-view="gamify">Gamify</button>
+          <button class="nav-item" data-view="ai">AI Copilot</button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <span class="status-dot"></span>
+          <span>Live demo data</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Enterprise field-force platform</p>
+            <h1 id="view-title">Manager Command Center</h1>
+          </div>
+          <div class="top-actions">
+            <button class="icon-button" title="Notifications">!</button>
+            <button class="primary-action">Create Beat Plan</button>
+          </div>
+        </header>
+
+        <section class="view active" id="command">
+          <div class="metric-grid">
+            <article class="metric">
+              <span>Team Present</span>
+              <strong>86%</strong>
+              <small>129 of 150 checked in</small>
+            </article>
+            <article class="metric">
+              <span>Visits Completed</span>
+              <strong>1,248</strong>
+              <small>+18% vs yesterday</small>
+            </article>
+            <article class="metric">
+              <span>Orders Booked</span>
+              <strong>₹42.7L</strong>
+              <small>312 productive calls</small>
+            </article>
+            <article class="metric">
+              <span>Alerts</span>
+              <strong>17</strong>
+              <small>GPS, missed visits, stockouts</small>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel large-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Live Field Activity</h2>
+                  <p>GPS coverage, route adherence, and team status.</p>
+                </div>
+                <select aria-label="Region filter">
+                  <option>North Zone</option>
+                  <option>West Zone</option>
+                  <option>South Zone</option>
+                </select>
+              </div>
+              <div class="map-board">
+                <div class="map-route route-one"></div>
+                <div class="map-route route-two"></div>
+                <span class="pin pin-a">ASM</span>
+                <span class="pin pin-b">MR</span>
+                <span class="pin pin-c">SO</span>
+                <span class="pin pin-d">DST</span>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Exceptions</h2>
+                  <p>Needs manager attention.</p>
+                </div>
+              </div>
+              <ul class="activity-list">
+                <li><strong>Fake GPS risk</strong><span>3 users flagged</span></li>
+                <li><strong>Missed high-value doctors</strong><span>12 visits pending</span></li>
+                <li><strong>Low distributor stock</strong><span>8 SKUs below threshold</span></li>
+                <li><strong>Collection overdue</strong><span>₹9.4L due this week</span></li>
+              </ul>
+            </section>
+          </div>
+
+          <div class="dashboard-grid three">
+            <section class="panel">
+              <h2>Sales Trend</h2>
+              <div class="bar-chart" aria-label="Sales trend chart">
+                <span style="height: 42%"></span>
+                <span style="height: 55%"></span>
+                <span style="height: 48%"></span>
+                <span style="height: 68%"></span>
+                <span style="height: 74%"></span>
+                <span style="height: 64%"></span>
+                <span style="height: 88%"></span>
+              </div>
+            </section>
+            <section class="panel">
+              <h2>Leaderboard</h2>
+              <ol class="leaderboard">
+                <li><span>Riya Sharma</span><strong>4,920 pts</strong></li>
+                <li><span>Amit Verma</span><strong>4,610 pts</strong></li>
+                <li><span>Naveen Rao</span><strong>4,320 pts</strong></li>
+              </ol>
+            </section>
+            <section class="panel">
+              <h2>AI Suggestions</h2>
+              <div class="ai-note">
+                Prioritize 18 retailers with declining SKU availability and push the glucose portfolio in Jaipur East.
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="field">
+          <div class="phone-and-detail">
+            <div class="phone">
+              <div class="phone-top"></div>
+              <div class="phone-screen">
+                <p class="eyebrow">Today</p>
+                <h2>Good morning, Riya</h2>
+                <button class="checkin">GPS Check In</button>
+                <div class="mini-grid">
+                  <span><strong>12</strong> Visits</span>
+                  <span><strong>₹1.8L</strong> Target</span>
+                  <span><strong>8</strong> Streak</span>
+                  <span><strong>3</strong> Tasks</span>
+                </div>
+                <div class="visit-card">
+                  <small>Next visit</small>
+                  <strong>Dr. Mehta Clinic</strong>
+                  <span>1.6 km away | Cardiologist</span>
+                </div>
+                <div class="visit-card">
+                  <small>AI prompt</small>
+                  <strong>Recommend CardioMax starter samples</strong>
+                  <span>High response potential this cycle</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="module-copy">
+              <p class="eyebrow">Mobile-first field workflow</p>
+              <h2>Built for low-click daily execution</h2>
+              <p>
+                The mobile app should work offline, capture geo-tagged proof,
+                book orders, guide visits, and motivate users through points,
+                streaks, challenges, and instant achievement tracking.
+              </p>
+              <div class="feature-list">
+                <span>Offline visits</span>
+                <span>Voice notes</span>
+                <span>Route tracking</span>
+                <span>Order cart</span>
+                <span>Scheme auto-apply</span>
+                <span>Local language UI</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="visits">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Visit intelligence</p>
+              <h2>Planned vs Actual Calls</h2>
+            </div>
+            <button class="primary-action">Approve Tour Plan</button>
+          </div>
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Outcome</th>
+                  <th>Next Action</th>
+                </tr>
+              </thead>
+              <tbody id="visitRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="sales">
+          <div class="metric-grid">
+            <article class="metric"><span>Primary Sales</span><strong>₹2.8Cr</strong><small>This month</small></article>
+            <article class="metric"><span>Secondary Sales</span><strong>₹1.9Cr</strong><small>72% achievement</small></article>
+            <article class="metric"><span>Collections</span><strong>₹86L</strong><small>Due this week</small></article>
+            <article class="metric"><span>Returns</span><strong>1.8%</strong><small>Within control</small></article>
+          </div>
+          <section class="panel">
+            <h2>Product Performance</h2>
+            <div class="product-list" id="productRows"></div>
+          </section>
+        </section>
+
+        <section class="view" id="schemes">
+          <div class="rules-layout">
+            <section class="panel">
+              <h2>Scheme Builder</h2>
+              <div class="builder-stack">
+                <label>Scheme Type<select><option>Quantity Slab</option><option>BOGO</option><option>Cashback</option></select></label>
+                <label>Customer Segment<select><option>A-Class Retailers</option><option>Distributors</option><option>Doctors</option></select></label>
+                <label>Rule<input value="Buy 10 units, get 2 free" /></label>
+                <button class="primary-action">Simulate Scheme</button>
+              </div>
+            </section>
+            <section class="panel">
+              <h2>Rule Preview</h2>
+              <div class="rule-preview">
+                Applies in North Zone for A-Class retailers from 1 Jun to 30 Jun. Estimated lift: 14%. Estimated claim liability: ₹7.8L.
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="incentives">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Dynamic incentive engine</p>
+              <h2>Slabs, hierarchy payouts, and simulations</h2>
+            </div>
+          </div>
+          <div class="incentive-grid">
+            <article class="panel"><h2>MR Slab</h2><strong>₹12,400</strong><p>Projected payout at 84% achievement.</p></article>
+            <article class="panel"><h2>ASM Override</h2><strong>₹48,900</strong><p>Based on team achievement and collections.</p></article>
+            <article class="panel"><h2>Focus SKU Bonus</h2><strong>₹3.2L</strong><p>Total liability across active users.</p></article>
+          </div>
+        </section>
+
+        <section class="view" id="gamify">
+          <div class="gamify-hero">
+            <div>
+              <p class="eyebrow">Motivation layer</p>
+              <h2>Contests, streaks, badges, and rewards</h2>
+              <p>
+                Gamification should reward the right behavior: coverage,
+                productive calls, collections, training, and data quality.
+              </p>
+            </div>
+            <div class="trophy-board">
+              <span>Level 12</span>
+              <strong>Market Champion</strong>
+              <small>4,920 points | 8-day streak</small>
+            </div>
+          </div>
+          <div class="badge-grid">
+            <span>Beat Finisher</span>
+            <span>Collection Hero</span>
+            <span>Launch Master</span>
+            <span>Zero Miss Streak</span>
+            <span>Retail Audit Pro</span>
+            <span>Coach Favorite</span>
+          </div>
+        </section>
+
+        <section class="view" id="ai">
+          <div class="ai-layout">
+            <section class="panel chat-panel">
+              <h2>AI Sales Copilot</h2>
+              <div class="chat">
+                <p class="assistant-msg">Ask me to plan your day, explain sales gaps, summarize visits, or recommend customers.</p>
+                <p class="user-msg">Plan Jaipur East for tomorrow.</p>
+                <p class="assistant-msg">Start with 4 high-potential doctors, then cover 9 retailers near the distributor stock point. Push CardioMax and VitaPlus based on last 30-day movement.</p>
+              </div>
+              <div class="chat-input">
+                <input placeholder="Ask the AI copilot..." />
+                <button>Send</button>
+              </div>
+            </section>
+            <section class="panel">
+              <h2>AI Capabilities</h2>
+              <ul class="activity-list">
+                <li><strong>Voice to DCR</strong><span>Convert speech into structured reports</span></li>
+                <li><strong>OCR invoices</strong><span>Extract bill and SKU data</span></li>
+                <li><strong>Predictive sales</strong><span>Forecast territory performance</span></li>
+                <li><strong>Smart stock</strong><span>Recommend replenishment</span></li>
+              </ul>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
