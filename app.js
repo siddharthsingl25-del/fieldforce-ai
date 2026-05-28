@@ -81,6 +81,9 @@ const products = [
   ["ImmunoCare", 74, "₹61L"]
 ];
 
+let cachedCustomers = [];
+let cachedProducts = [];
+
 function switchView(viewId) {
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.toggle("active", view.id === viewId);
@@ -321,18 +324,23 @@ function renderProducts() {
 function renderAdminCustomers(customers) {
   const rows = document.getElementById("adminCustomerRows");
   if (!rows) return;
+  cachedCustomers = customers;
+  const query = valueOf("adminCustomerSearch").toLowerCase();
+  const visibleCustomers = query
+    ? customers.filter((customer) => [customer.name, customer.type, customer.area, customer.customerClass, customer.customer_class, customer.specialty, customer.mobile].join(" ").toLowerCase().includes(query))
+    : customers;
 
-  const doctorTotal = customers.filter((customer) => customer.type === "Doctor").length;
-  const retailerTotal = customers.filter((customer) => customer.type === "Retailer").length;
-  const outstandingTotal = customers.reduce((sum, customer) => sum + Number(customer.outstanding || 0), 0);
+  const doctorTotal = visibleCustomers.filter((customer) => customer.type === "Doctor").length;
+  const retailerTotal = visibleCustomers.filter((customer) => customer.type === "Retailer").length;
+  const outstandingTotal = visibleCustomers.reduce((sum, customer) => sum + Number(customer.outstanding || 0), 0);
 
-  document.getElementById("adminCustomerTotal").textContent = customers.length;
+  document.getElementById("adminCustomerTotal").textContent = visibleCustomers.length;
   document.getElementById("adminDoctorTotal").textContent = doctorTotal;
   document.getElementById("adminRetailerTotal").textContent = retailerTotal;
   document.getElementById("adminOutstandingTotal").textContent = money(outstandingTotal);
 
-  rows.innerHTML = customers.length
-    ? customers
+  rows.innerHTML = visibleCustomers.length
+    ? visibleCustomers
         .slice()
         .reverse()
         .map((customer) => {
@@ -359,18 +367,23 @@ function renderAdminCustomers(customers) {
 function renderAdminProducts(products) {
   const rows = document.getElementById("adminProductRows");
   if (!rows) return;
+  cachedProducts = products;
+  const query = valueOf("adminProductSearch").toLowerCase();
+  const visibleProducts = query
+    ? products.filter((product) => [product.name, product.composition, product.category, product.pack, product.scheme, product.mrp, product.saleRate, product.sale_rate].join(" ").toLowerCase().includes(query))
+    : products;
 
-  const stockTotal = products.reduce((sum, product) => sum + Number(product.stock || 0), 0);
-  const avgMrp = products.length ? products.reduce((sum, product) => sum + Number(product.mrp || 0), 0) / products.length : 0;
-  const schemeTotal = products.filter((product) => product.scheme).length;
+  const stockTotal = visibleProducts.reduce((sum, product) => sum + Number(product.stock || 0), 0);
+  const avgMrp = visibleProducts.length ? visibleProducts.reduce((sum, product) => sum + Number(product.mrp || 0), 0) / visibleProducts.length : 0;
+  const schemeTotal = visibleProducts.filter((product) => product.scheme).length;
 
-  document.getElementById("adminProductTotal").textContent = products.length;
+  document.getElementById("adminProductTotal").textContent = visibleProducts.length;
   document.getElementById("adminStockTotal").textContent = stockTotal;
   document.getElementById("adminAvgMrp").textContent = money(avgMrp);
   document.getElementById("adminSchemeTotal").textContent = schemeTotal;
 
-  rows.innerHTML = products.length
-    ? products
+  rows.innerHTML = visibleProducts.length
+    ? visibleProducts
         .slice()
         .reverse()
         .map((product) => {
@@ -666,6 +679,9 @@ document.querySelectorAll("[data-download-sample]").forEach((button) => {
     adminToast("Sample CSV downloaded");
   });
 });
+
+document.getElementById("adminCustomerSearch")?.addEventListener("input", () => renderAdminCustomers(cachedCustomers));
+document.getElementById("adminProductSearch")?.addEventListener("input", () => renderAdminProducts(cachedProducts));
 
 document.getElementById("adminSaveProduct")?.addEventListener("click", async () => {
   const name = valueOf("adminProductName");

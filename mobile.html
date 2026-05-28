@@ -110,8 +110,8 @@
       <section class="mobile-view" id="m-visit">
         <section class="customer-card">
           <span class="pill">Current Visit</span>
-          <h2>Shiv Medicos</h2>
-          <p>A-Class retailer | 1.2 km away | Last order ₹42,000</p>
+          <h2 id="selectedVisitCustomerName">Select Customer</h2>
+          <p id="selectedVisitCustomerMeta">Choose customer from the dropdown before visit submission.</p>
           <div class="visit-actions">
             <button>Start Visit</button>
             <button>Voice Note</button>
@@ -121,6 +121,10 @@
 
         <section class="mobile-panel">
           <h2>Visit Report</h2>
+          <label>
+            Customer
+            <select id="visitCustomerSelect"></select>
+          </label>
           <label>
             Outcome
             <select id="visitOutcome">
@@ -158,18 +162,15 @@
             <h2>Order Cart</h2>
             <span>Scheme applied</span>
           </div>
-          <div class="sku-row">
-            <div><strong>CardioMax</strong><span>PTR ₹148 | Stock available</span></div>
-            <input class="qty-input" type="number" value="12" min="0" data-price="148" />
-          </div>
-          <div class="sku-row">
-            <div><strong>VitaPlus</strong><span>Buy 10 get 2 free</span></div>
-            <input class="qty-input" type="number" value="10" min="0" data-price="220" />
-          </div>
-          <div class="sku-row">
-            <div><strong>GlucoSafe</strong><span>AI suggested reorder</span></div>
-            <input class="qty-input" type="number" value="6" min="0" data-price="156" />
-          </div>
+          <label>
+            Customer
+            <select id="orderCustomerSelect"></select>
+          </label>
+          <label>
+            Product Search
+            <input id="orderProductSearch" placeholder="Search product / composition..." />
+          </label>
+          <div id="orderProductRows"></div>
         </section>
         <section class="total-card">
           <span>Total Order</span>
@@ -238,6 +239,7 @@
             <h2>Saved Customers</h2>
             <span>Local</span>
           </div>
+          <input id="mobileCustomerSearch" placeholder="Search customers..." />
           <div class="master-list" id="customerList"></div>
         </section>
       </section>
@@ -290,6 +292,7 @@
             <h2>Saved Products</h2>
             <span>Local</span>
           </div>
+          <input id="mobileProductSearch" placeholder="Search products / composition..." />
           <div class="master-list" id="productList"></div>
         </section>
       </section>

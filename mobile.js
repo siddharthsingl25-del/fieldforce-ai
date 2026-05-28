@@ -35,6 +35,7 @@ function saveState() {
 }
 
 let state = loadState();
+let orderSearch = "";
 
 function cloudHeaders(extra = {}) {
   return {
@@ -127,10 +128,14 @@ function renderHistory() {
 
 function renderCustomers() {
   const customerList = document.getElementById("customerList");
+  const query = document.getElementById("mobileCustomerSearch")?.value?.toLowerCase() || "";
+  const customers = query
+    ? state.customers.filter((customer) => [customer.name, customer.type, customer.area, customer.customerClass, customer.customer_class, customer.specialty, customer.mobile].join(" ").toLowerCase().includes(query))
+    : state.customers;
   document.getElementById("customerCount").textContent = `${state.customers.length} saved`;
 
-  customerList.innerHTML = state.customers.length
-    ? state.customers
+  customerList.innerHTML = customers.length
+    ? customers
         .slice()
         .reverse()
         .map((customer) => {
@@ -149,10 +154,14 @@ function renderCustomers() {
 
 function renderProducts() {
   const productList = document.getElementById("productList");
+  const query = document.getElementById("mobileProductSearch")?.value?.toLowerCase() || "";
+  const products = query
+    ? state.products.filter((product) => [product.name, product.composition, product.category, product.pack, product.scheme, product.mrp, product.saleRate, product.sale_rate].join(" ").toLowerCase().includes(query))
+    : state.products;
   document.getElementById("productCount").textContent = `${state.products.length} saved`;
 
-  productList.innerHTML = state.products.length
-    ? state.products
+  productList.innerHTML = products.length
+    ? products
         .slice()
         .reverse()
         .map((product) => {
@@ -167,6 +176,62 @@ function renderProducts() {
         })
         .join("")
     : `<div class="master-item"><strong>No products added</strong><span>Add product name, composition, MRP, sale rate, scheme, and stock.</span></div>`;
+}
+
+function renderCustomerDropdowns() {
+  const options = state.customers.length
+    ? state.customers.map((customer) => `<option value="${customer.name}">${customer.name} - ${customer.type || "Customer"}</option>`).join("")
+    : `<option value="Shiv Medicos">Shiv Medicos - Demo Retailer</option>`;
+
+  const visitSelect = document.getElementById("visitCustomerSelect");
+  const orderSelect = document.getElementById("orderCustomerSelect");
+  if (visitSelect) visitSelect.innerHTML = options;
+  if (orderSelect) orderSelect.innerHTML = options;
+  updateSelectedVisitCustomer();
+}
+
+function updateSelectedVisitCustomer() {
+  const selectedName = document.getElementById("visitCustomerSelect")?.value || "Shiv Medicos";
+  const customer = state.customers.find((item) => item.name === selectedName);
+  document.getElementById("selectedVisitCustomerName").textContent = selectedName;
+  document.getElementById("selectedVisitCustomerMeta").textContent = customer
+    ? `${customer.customerClass || customer.customer_class || "-"} | ${customer.type || "Customer"} | ${customer.area || "No area"}`
+    : "Demo retailer | Add customers in Customer Master";
+}
+
+function renderOrderProducts() {
+  const target = document.getElementById("orderProductRows");
+  if (!target) return;
+  const query = orderSearch.toLowerCase();
+  const products = state.products.length
+    ? state.products
+    : [
+        { name: "CardioMax", saleRate: 148, composition: "Demo composition", scheme: "Stock available" },
+        { name: "VitaPlus", saleRate: 220, composition: "Demo composition", scheme: "Buy 10 get 2 free" },
+        { name: "GlucoSafe", saleRate: 156, composition: "Demo composition", scheme: "AI suggested reorder" }
+      ];
+  const visibleProducts = query
+    ? products.filter((product) => [product.name, product.composition, product.category, product.scheme].join(" ").toLowerCase().includes(query))
+    : products;
+
+  target.innerHTML = visibleProducts.length
+    ? visibleProducts
+        .map((product) => {
+          const price = Number(product.saleRate || product.sale_rate || product.mrp || 0);
+          return `
+            <div class="sku-row">
+              <div><strong>${product.name}</strong><span>${product.composition || "No composition"} | Rate ${money(price)} | ${product.scheme || "No scheme"}</span></div>
+              <input class="qty-input" type="number" value="0" min="0" data-price="${price}" data-product="${product.name}" />
+            </div>
+          `;
+        })
+        .join("")
+    : `<div class="master-item"><strong>No product found</strong><span>Add product in Product Master.</span></div>`;
+
+  document.querySelectorAll(".qty-input").forEach((input) => {
+    input.addEventListener("input", renderOrderTotal);
+  });
+  renderOrderTotal();
 }
 
 function renderBeatPlans(plans = []) {
@@ -299,6 +364,8 @@ async function syncFromCloud() {
     renderHistory();
     renderCustomers();
     renderProducts();
+    renderCustomerDropdowns();
+    renderOrderProducts();
     renderBeatPlans(beatPlans || []);
     renderTasks(tasks || []);
     renderSchemes(schemes || []);
@@ -342,7 +409,7 @@ document.getElementById("checkButton").addEventListener("click", () => {
 
 document.getElementById("submitVisitButton").addEventListener("click", async () => {
   const visit = {
-    customer: "Shiv Medicos",
+    customer: document.getElementById("visitCustomerSelect")?.value || "Shiv Medicos",
     outcome: document.getElementById("visitOutcome").value,
     notes: document.getElementById("visitNotes").value.trim(),
     time: currentTime()
@@ -369,7 +436,7 @@ document.getElementById("submitVisitButton").addEventListener("click", async () 
 
 document.getElementById("bookOrderButton").addEventListener("click", async () => {
   const order = {
-    customer: "Shiv Medicos",
+    customer: document.getElementById("orderCustomerSelect")?.value || "Shiv Medicos",
     total: calculateOrderTotal(),
     time: currentTime()
   };
@@ -482,11 +549,21 @@ document.querySelectorAll(".qty-input").forEach((input) => {
   input.addEventListener("input", renderOrderTotal);
 });
 
+document.getElementById("mobileCustomerSearch")?.addEventListener("input", renderCustomers);
+document.getElementById("mobileProductSearch")?.addEventListener("input", renderProducts);
+document.getElementById("visitCustomerSelect")?.addEventListener("change", updateSelectedVisitCustomer);
+document.getElementById("orderProductSearch")?.addEventListener("input", (event) => {
+  orderSearch = event.target.value;
+  renderOrderProducts();
+});
+
 renderUser();
 renderCheckIn();
 renderHistory();
 renderCustomers();
 renderProducts();
+renderCustomerDropdowns();
+renderOrderProducts();
 renderBeatPlans();
 renderTasks();
 renderSchemes();
