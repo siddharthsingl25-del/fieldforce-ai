@@ -96,6 +96,8 @@ let cachedTerritories = [];
 let discountAssignments = [];
 let adminAuthSession = loadAdminAuthSession();
 let adminProfile = null;
+let editingCustomerId = null;
+let editingProductId = null;
 
 const reportCatalog = [
   ["5324", "User Performance Dashboard", "Attendance, calls, productivity, outlet time, and KM by user"],
@@ -280,6 +282,29 @@ async function cloudInsert(table, payload) {
     headers: { ...cloudHeaders(), Prefer: "return=representation" },
     body: JSON.stringify(payload)
   });
+}
+
+async function cloudUpdate(table, id, payload) {
+  if (!cloudEnabled) return null;
+
+  return requestJson(`${supabaseUrl}/rest/v1/${table}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: { ...cloudHeaders(), Prefer: "return=representation" },
+    body: JSON.stringify(payload)
+  });
+}
+
+async function cloudDelete(table, id) {
+  if (!cloudEnabled) return null;
+
+  return requestJson(`${supabaseUrl}/rest/v1/${table}?id=eq.${id}`, {
+    method: "DELETE",
+    headers: { ...cloudHeaders(), Prefer: "return=representation" }
+  });
+}
+
+function canManageMasterData() {
+  return ["admin", "manager"].includes(adminProfile?.role);
 }
 
 async function unlockAdmin(session) {
@@ -612,15 +637,26 @@ function renderAdminCustomers(customers) {
               <td>${customer.specialty || "-"}</td>
               <td>${customer.mobile || "-"}</td>
               <td>${money(customer.outstanding)}</td>
+              <td>
+                <button class="table-action" data-edit-customer="${customer.id}">Edit</button>
+                <button class="table-action danger" data-delete-customer="${customer.id}">Delete</button>
+              </td>
             </tr>
           `;
         })
         .join("")
     : `
       <tr>
-        <td colspan="7"><strong>No customer data yet.</strong> Add customers from the mobile app, then refresh this page.</td>
+        <td colspan="8"><strong>No customer data yet.</strong> Add customers from the mobile app, then refresh this page.</td>
       </tr>
     `;
+
+  document.querySelectorAll("[data-edit-customer]").forEach((button) => {
+    button.addEventListener("click", () => editCustomer(button.dataset.editCustomer));
+  });
+  document.querySelectorAll("[data-delete-customer]").forEach((button) => {
+    button.addEventListener("click", () => deleteCustomer(button.dataset.deleteCustomer));
+  });
 }
 
 function renderAdminProducts(products) {
@@ -662,15 +698,112 @@ function renderAdminProducts(products) {
               <td>${money(product.saleRate || product.sale_rate)}</td>
               <td>${product.scheme || "-"}</td>
               <td>${product.stock || 0}</td>
+              <td>
+                <button class="table-action" data-edit-product="${product.id}">Edit</button>
+                <button class="table-action danger" data-delete-product="${product.id}">Delete</button>
+              </td>
             </tr>
           `;
         })
         .join("")
     : `
       <tr>
-        <td colspan="8"><strong>No product data yet.</strong> Add products from the mobile app, then refresh this page.</td>
+        <td colspan="9"><strong>No product data yet.</strong> Add products from the mobile app, then refresh this page.</td>
       </tr>
     `;
+
+  document.querySelectorAll("[data-edit-product]").forEach((button) => {
+    button.addEventListener("click", () => editProduct(button.dataset.editProduct));
+  });
+  document.querySelectorAll("[data-delete-product]").forEach((button) => {
+    button.addEventListener("click", () => deleteProduct(button.dataset.deleteProduct));
+  });
+}
+
+function resetAdminCustomerForm() {
+  editingCustomerId = null;
+  ["adminCustomerName", "adminCustomerMobile", "adminCustomerState", "adminCustomerArea", "adminCustomerSpecialty"].forEach((id) => setValue(id));
+  setValue("adminCustomerType", "Retailer");
+  setValue("adminCustomerClass", "A-Class");
+  setValue("adminCustomerOutstanding", "0");
+  const saveButton = document.getElementById("adminSaveCustomer");
+  if (saveButton) saveButton.textContent = "Save Customer";
+}
+
+function resetAdminProductForm() {
+  editingProductId = null;
+  ["adminProductName", "adminProductComposition", "adminProductCategory", "adminProductPack", "adminProductScheme"].forEach((id) => setValue(id));
+  ["adminProductMrp", "adminProductSaleRate", "adminProductStock"].forEach((id) => setValue(id, "0"));
+  const saveButton = document.getElementById("adminSaveProduct");
+  if (saveButton) saveButton.textContent = "Save Product";
+}
+
+function editCustomer(id) {
+  if (!canManageMasterData()) return adminToast("Access denied");
+  const customer = cachedCustomers.find((item) => String(item.id) === String(id));
+  if (!customer) return adminToast("Customer not found");
+
+  editingCustomerId = id;
+  setValue("adminCustomerType", customer.type || "Retailer");
+  setValue("adminCustomerName", customer.name || "");
+  setValue("adminCustomerMobile", customer.mobile || "");
+  setValue("adminCustomerState", customer.address || customer.state || "");
+  setValue("adminCustomerArea", customer.area || "");
+  setValue("adminCustomerClass", customer.customer_class || customer.customerClass || "A-Class");
+  setValue("adminCustomerSpecialty", customer.specialty || "");
+  setValue("adminCustomerOutstanding", customer.outstanding || "0");
+  const saveButton = document.getElementById("adminSaveCustomer");
+  if (saveButton) saveButton.textContent = "Update Customer";
+  document.getElementById("adminCustomerName")?.focus();
+  adminToast("Customer loaded for editing");
+}
+
+async function deleteCustomer(id) {
+  if (!canManageMasterData()) return adminToast("Access denied");
+  if (!confirm("Are you sure?")) return;
+
+  try {
+    await cloudDelete("customers", id);
+    if (String(editingCustomerId) === String(id)) resetAdminCustomerForm();
+    await renderMasterData();
+    adminToast("Customer deleted");
+  } catch {
+    adminToast("Customer delete failed. Check RLS delete policy.");
+  }
+}
+
+function editProduct(id) {
+  if (!canManageMasterData()) return adminToast("Access denied");
+  const product = cachedProducts.find((item) => String(item.id) === String(id));
+  if (!product) return adminToast("Product not found");
+
+  editingProductId = id;
+  setValue("adminProductName", product.name || "");
+  setValue("adminProductComposition", product.composition || "");
+  setValue("adminProductCategory", product.category || "");
+  setValue("adminProductPack", product.pack || "");
+  setValue("adminProductMrp", product.mrp || "0");
+  setValue("adminProductSaleRate", product.sale_rate || product.saleRate || "0");
+  setValue("adminProductScheme", product.scheme || "");
+  setValue("adminProductStock", product.stock || "0");
+  const saveButton = document.getElementById("adminSaveProduct");
+  if (saveButton) saveButton.textContent = "Update Product";
+  document.getElementById("adminProductName")?.focus();
+  adminToast("Product loaded for editing");
+}
+
+async function deleteProduct(id) {
+  if (!canManageMasterData()) return adminToast("Access denied");
+  if (!confirm("Are you sure?")) return;
+
+  try {
+    await cloudDelete("products", id);
+    if (String(editingProductId) === String(id)) resetAdminProductForm();
+    await renderMasterData();
+    adminToast("Product deleted");
+  } catch {
+    adminToast("Product delete failed. Check RLS delete policy.");
+  }
 }
 
 function populateProductCategoryFilter(products) {
@@ -1278,23 +1411,30 @@ document.getElementById("adminSaveAnnouncement")?.addEventListener("click", asyn
 document.getElementById("adminSaveProduct")?.addEventListener("click", async () => {
   const name = valueOf("adminProductName");
   if (!name) return adminToast("Product name required");
+  if (!canManageMasterData()) return adminToast("Access denied");
+
+  const payload = {
+    name,
+    composition: valueOf("adminProductComposition"),
+    category: valueOf("adminProductCategory"),
+    pack: valueOf("adminProductPack"),
+    mrp: numberValue("adminProductMrp"),
+    sale_rate: numberValue("adminProductSaleRate"),
+    scheme: valueOf("adminProductScheme"),
+    stock: numberValue("adminProductStock"),
+    created_by: "Admin"
+  };
 
   try {
-    await cloudInsert("products", {
-      name,
-      composition: valueOf("adminProductComposition"),
-      category: valueOf("adminProductCategory"),
-      pack: valueOf("adminProductPack"),
-      mrp: numberValue("adminProductMrp"),
-      sale_rate: numberValue("adminProductSaleRate"),
-      scheme: valueOf("adminProductScheme"),
-      stock: numberValue("adminProductStock"),
-      created_by: "Admin"
-    });
-    ["adminProductName", "adminProductComposition", "adminProductCategory", "adminProductPack", "adminProductScheme"].forEach((id) => setValue(id));
-    ["adminProductMrp", "adminProductSaleRate", "adminProductStock"].forEach((id) => setValue(id, "0"));
-    renderMasterData();
-    adminToast("Product saved");
+    if (editingProductId) {
+      await cloudUpdate("products", editingProductId, payload);
+      adminToast("Product updated");
+    } else {
+      await cloudInsert("products", payload);
+      adminToast("Product saved");
+    }
+    resetAdminProductForm();
+    await renderMasterData();
   } catch (error) {
     adminToast("Product save failed");
   }
@@ -1303,23 +1443,30 @@ document.getElementById("adminSaveProduct")?.addEventListener("click", async () 
 document.getElementById("adminSaveCustomer")?.addEventListener("click", async () => {
   const name = valueOf("adminCustomerName");
   if (!name) return adminToast("Customer name required");
+  if (!canManageMasterData()) return adminToast("Access denied");
+
+  const payload = {
+    type: valueOf("adminCustomerType"),
+    name,
+    mobile: valueOf("adminCustomerMobile"),
+    area: valueOf("adminCustomerArea"),
+    customer_class: valueOf("adminCustomerClass"),
+    specialty: valueOf("adminCustomerSpecialty"),
+    outstanding: numberValue("adminCustomerOutstanding"),
+    address: valueOf("adminCustomerState"),
+    created_by: "Admin"
+  };
 
   try {
-    await cloudInsert("customers", {
-      type: valueOf("adminCustomerType"),
-      name,
-      mobile: valueOf("adminCustomerMobile"),
-      area: valueOf("adminCustomerArea"),
-      customer_class: valueOf("adminCustomerClass"),
-      specialty: valueOf("adminCustomerSpecialty"),
-      outstanding: numberValue("adminCustomerOutstanding"),
-      address: valueOf("adminCustomerState"),
-      created_by: "Admin"
-    });
-    ["adminCustomerName", "adminCustomerMobile", "adminCustomerState", "adminCustomerArea", "adminCustomerSpecialty"].forEach((id) => setValue(id));
-    setValue("adminCustomerOutstanding", "0");
-    renderMasterData();
-    adminToast("Customer saved");
+    if (editingCustomerId) {
+      await cloudUpdate("customers", editingCustomerId, payload);
+      adminToast("Customer updated");
+    } else {
+      await cloudInsert("customers", payload);
+      adminToast("Customer saved");
+    }
+    resetAdminCustomerForm();
+    await renderMasterData();
   } catch (error) {
     adminToast("Customer save failed");
   }
