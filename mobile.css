@@ -387,7 +387,7 @@ textarea {
 
 .sku-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px;
+  grid-template-columns: minmax(0, 1fr) 74px 68px;
   gap: 12px;
   align-items: center;
   padding: 13px 0;
@@ -412,6 +412,24 @@ textarea {
 .sku-row input {
   text-align: center;
   font-weight: 900;
+}
+
+.line-action {
+  border: 0;
+  border-radius: 10px;
+  min-height: 40px;
+  background: var(--green);
+  color: white;
+  font-weight: 900;
+}
+
+.line-action.remove {
+  background: #ffe8e4;
+  color: #a33d2d;
+}
+
+.order-line-title {
+  margin-top: 18px;
 }
 
 .total-card {

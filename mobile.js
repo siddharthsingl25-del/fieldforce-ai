@@ -39,6 +39,7 @@ function saveState() {
 
 let state = loadState();
 let orderSearch = "";
+let orderCartItems = [];
 let activeOutletSession = null;
 let outletTimer = null;
 
@@ -288,18 +289,20 @@ function renderOrderProducts() {
     ? visibleProducts
         .map((product) => {
           const price = Number(product.saleRate || product.sale_rate || product.mrp || 0);
+          const productId = product.id || "";
           return `
             <div class="sku-row">
               <div><strong>${product.name}</strong><span>${product.composition || "No composition"} | Rate ${money(price)} | ${product.scheme || "No scheme"}</span></div>
-              <input class="qty-input" type="number" value="0" min="0" data-price="${price}" data-product="${product.name}" />
+              <input class="qty-input" type="number" value="0" min="0" data-price="${price}" data-product="${product.name}" data-product-id="${productId}" />
+              <button class="line-action add-order-item" data-product="${product.name}" data-product-id="${productId}" data-price="${price}">Add</button>
             </div>
           `;
         })
         .join("")
     : `<div class="master-item"><strong>No product found</strong><span>Ask admin to add this product in Product Master.</span></div>`;
 
-  document.querySelectorAll(".qty-input").forEach((input) => {
-    input.addEventListener("input", renderOrderTotal);
+  document.querySelectorAll(".add-order-item").forEach((button) => {
+    button.addEventListener("click", () => addOrderItem(button));
   });
   renderOrderTotal();
 }
@@ -375,13 +378,64 @@ function renderAnnouncements(announcements = state.announcements || []) {
 }
 
 function calculateOrderTotal() {
-  return [...document.querySelectorAll(".qty-input")].reduce((sum, input) => {
-    return sum + Number(input.value || 0) * Number(input.dataset.price || 0);
-  }, 0);
+  return orderCartItems.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
+}
+
+function renderOrderItems() {
+  const list = document.getElementById("orderItemList");
+  const count = document.getElementById("orderItemCount");
+  if (!list || !count) return;
+
+  count.textContent = `${orderCartItems.length} items`;
+  list.innerHTML = orderCartItems.length
+    ? orderCartItems
+        .map((item, index) => `
+          <div class="master-item">
+            <strong>${item.productName}</strong>
+            <span>Qty ${item.quantity} x ${money(item.rate)} = ${money(item.lineTotal)}</span>
+            <button class="line-action remove" data-remove-order-item="${index}">Remove</button>
+          </div>
+        `)
+        .join("")
+    : `<div class="master-item"><strong>No products added</strong><span>Enter quantity and tap Add.</span></div>`;
+
+  document.querySelectorAll("[data-remove-order-item]").forEach((button) => {
+    button.addEventListener("click", () => {
+      orderCartItems.splice(Number(button.dataset.removeOrderItem), 1);
+      renderOrderItems();
+      renderOrderTotal();
+    });
+  });
 }
 
 function renderOrderTotal() {
   document.getElementById("orderTotal").textContent = money(calculateOrderTotal());
+  renderOrderItems();
+}
+
+function addOrderItem(button) {
+  const row = button.closest(".sku-row");
+  const input = row?.querySelector(".qty-input");
+  const quantity = Number(input?.value || 0);
+  const rate = Number(button.dataset.price || 0);
+
+  if (!quantity) {
+    toast("Enter quantity first");
+    return;
+  }
+
+  orderCartItems.push({
+    productId: button.dataset.productId || null,
+    productName: button.dataset.product,
+    quantity,
+    rate,
+    lineTotal: quantity * rate
+  });
+
+  if (input) input.value = "0";
+  renderOrderItems();
+  renderOrderTotal();
+  toast("Product added to order");
 }
 
 function toast(message) {
@@ -664,10 +718,16 @@ document.getElementById("submitRetailAuditButton")?.addEventListener("click", as
 });
 
 document.getElementById("bookOrderButton").addEventListener("click", async () => {
+  if (!orderCartItems.length) {
+    toast("Add at least one product");
+    return;
+  }
+
   const order = {
     customer: document.getElementById("orderCustomerSelect")?.value || "Shiv Medicos",
     total: calculateOrderTotal(),
-    time: currentTime()
+    time: currentTime(),
+    items: [...orderCartItems]
   };
 
   state.orders.push(order);
@@ -675,13 +735,29 @@ document.getElementById("bookOrderButton").addEventListener("click", async () =>
   renderHistory();
 
   try {
-    await cloudInsert("orders", {
+    const savedOrder = await cloudInsert("orders", {
       customer: order.customer,
       total: order.total,
       user_name: state.name,
       role: state.role,
       order_time: order.time
     });
+    const orderId = savedOrder?.[0]?.id;
+    if (orderId) {
+      for (const item of order.items) {
+        await cloudInsert("order_items", {
+          order_id: orderId,
+          product_id: item.productId,
+          product_name: item.productName,
+          quantity: item.quantity,
+          rate: item.rate,
+          line_total: item.lineTotal
+        });
+      }
+    }
+    orderCartItems = [];
+    renderOrderItems();
+    renderOrderTotal();
     toast("Order booked to cloud");
   } catch {
     toast("Order saved locally");
@@ -729,10 +805,6 @@ document.getElementById("saveCustomerButton").addEventListener("click", async ()
   } catch {
     toast("Customer saved locally");
   }
-});
-
-document.querySelectorAll(".qty-input").forEach((input) => {
-  input.addEventListener("input", renderOrderTotal);
 });
 
 document.getElementById("mobileCustomerSearch")?.addEventListener("input", renderCustomers);

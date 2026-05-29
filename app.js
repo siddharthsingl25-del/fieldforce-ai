@@ -629,10 +629,15 @@ function renderCloudSales() {
   const rows = document.getElementById("adminOrderRows");
   if (!rows) return;
 
-  Promise.all([cloudSelect("orders"), cloudSelect("products")])
-    .then(([orders, productItems]) => {
+  Promise.all([cloudSelect("orders"), cloudSelect("products"), optionalCloudSelect("order_items")])
+    .then(([orders, productItems, orderItems]) => {
       const total = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
       const average = orders.length ? total / orders.length : 0;
+      const itemsByOrder = orderItems.reduce((acc, item) => {
+        if (!item.order_id) return acc;
+        acc[item.order_id] = [...(acc[item.order_id] || []), item];
+        return acc;
+      }, {});
 
       document.getElementById("salesOrderCount").textContent = orders.length;
       document.getElementById("salesOrderTotal").textContent = money(total);
@@ -642,6 +647,23 @@ function renderCloudSales() {
       rows.innerHTML = orders.length
         ? orders
             .map((order) => {
+              const lines = itemsByOrder[order.id] || [];
+              const lineRows = lines.length
+                ? `
+                  <tr>
+                    <td colspan="5">
+                      <div class="master-list">
+                        ${lines.map((item) => `
+                          <div class="master-item">
+                            <strong>${item.product_name || "-"}</strong>
+                            <span>Qty ${item.quantity || 0} x ${money(item.rate)} = ${money(item.line_total)}</span>
+                          </div>
+                        `).join("")}
+                      </div>
+                    </td>
+                  </tr>
+                `
+                : "";
               return `
                 <tr>
                   <td><strong>${order.customer || "-"}</strong></td>
@@ -650,6 +672,7 @@ function renderCloudSales() {
                   <td>${money(order.total)}</td>
                   <td>${order.order_time || "-"}</td>
                 </tr>
+                ${lineRows}
               `;
             })
             .join("")

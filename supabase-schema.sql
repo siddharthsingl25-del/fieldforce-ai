@@ -66,6 +66,17 @@ create table if not exists public.orders (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid references public.orders(id) on delete cascade,
+  product_id uuid references public.products(id),
+  product_name text not null,
+  quantity numeric default 0,
+  rate numeric default 0,
+  line_total numeric default 0,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.attendance (
   id uuid primary key default gen_random_uuid(),
   user_name text not null,
@@ -201,6 +212,7 @@ alter table public.products enable row level security;
 alter table public.visits enable row level security;
 alter table public.outlet_sessions enable row level security;
 alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
 alter table public.attendance enable row level security;
 alter table public.beat_plans enable row level security;
 alter table public.tasks enable row level security;
@@ -223,6 +235,8 @@ drop policy if exists "testing read outlet sessions" on public.outlet_sessions;
 drop policy if exists "testing insert outlet sessions" on public.outlet_sessions;
 drop policy if exists "testing read orders" on public.orders;
 drop policy if exists "testing insert orders" on public.orders;
+drop policy if exists "testing read order items" on public.order_items;
+drop policy if exists "testing insert order items" on public.order_items;
 drop policy if exists "testing read attendance" on public.attendance;
 drop policy if exists "testing insert attendance" on public.attendance;
 drop policy if exists "testing read beat plans" on public.beat_plans;
@@ -262,6 +276,9 @@ create policy "testing insert outlet sessions" on public.outlet_sessions for ins
 
 create policy "testing read orders" on public.orders for select to anon using (true);
 create policy "testing insert orders" on public.orders for insert to anon with check (true);
+
+create policy "testing read order items" on public.order_items for select to anon using (true);
+create policy "testing insert order items" on public.order_items for insert to anon with check (true);
 
 create policy "testing read attendance" on public.attendance for select to anon using (true);
 create policy "testing insert attendance" on public.attendance for insert to anon with check (true);
