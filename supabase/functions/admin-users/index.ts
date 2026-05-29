@@ -78,6 +78,8 @@ Deno.serve(async (req) => {
     const fullName = String(body.full_name || "").trim();
     const role = String(body.role || "").trim();
     const status = String(body.status || "").trim();
+    const phone = String(body.phone || "").trim();
+    const employeeId = String(body.employee_id || "").trim();
     const password = String(body.password || "");
 
     if (!id) return json({ error: "Missing user id" }, 400);
@@ -89,6 +91,8 @@ Deno.serve(async (req) => {
     if (fullName) update.full_name = fullName;
     if (["admin", "manager", "mr"].includes(role)) update.role = role;
     if (["active", "inactive"].includes(status)) update.status = status;
+    if ("phone" in body) update.phone = phone;
+    if ("employee_id" in body) update.employee_id = employeeId;
     if (password && password.length < 6) return json({ error: "Password must be at least 6 characters" }, 400);
 
     if (!Object.keys(update).length && !password) return json({ error: "No changes provided" }, 400);

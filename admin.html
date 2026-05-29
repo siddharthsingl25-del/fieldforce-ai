@@ -342,6 +342,41 @@
           </div>
         </section>
 
+        <section class="view" id="userDetail">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">User operations</p>
+              <h2 id="userDetailPageTitle">User Detail View</h2>
+              <p id="userDetailStatus">Loading selected user...</p>
+            </div>
+            <button class="primary-action secondary-action" id="backToUsersButton" type="button">Back to Users</button>
+          </div>
+          <section class="user-detail-hero panel">
+            <div class="profile-avatar" id="userDetailAvatar">U</div>
+            <div class="user-detail-main">
+              <span class="tag" id="userDetailActiveTag">Active</span>
+              <h2 id="userDetailName">-</h2>
+              <p id="userDetailEmail">-</p>
+              <div class="user-detail-meta">
+                <span><strong>Role</strong><small id="userDetailRole">-</small></span>
+                <span><strong>Employee ID</strong><small id="userDetailEmployeeId">-</small></span>
+                <span><strong>Phone</strong><small id="userDetailPhone">-</small></span>
+              </div>
+            </div>
+          </section>
+          <div class="user-detail-layout">
+            <aside class="user-tab-menu">
+              <button class="active" data-user-tab="profile" type="button">Profile</button>
+              <button data-user-tab="attendance" type="button">Attendance</button>
+              <button data-user-tab="orders" type="button">Orders <span>Coming soon</span></button>
+              <button data-user-tab="visits" type="button">Visits <span>Coming soon</span></button>
+              <button data-user-tab="targets" type="button">Targets <span>Coming soon</span></button>
+              <button data-user-tab="beatPlan" type="button">Beat Plan <span>Coming soon</span></button>
+            </aside>
+            <section class="panel user-tab-panel" id="userTabPanel"></section>
+          </div>
+        </section>
+
         <section class="view" id="customers">
           <div class="section-header">
             <div>

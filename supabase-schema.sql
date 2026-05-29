@@ -216,9 +216,18 @@ create table if not exists public.collections (
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
+  email text,
   role text not null check (role in ('admin', 'manager', 'mr')),
+  status text not null default 'active' check (status in ('active', 'inactive')),
+  employee_id text,
+  phone text,
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists status text not null default 'active';
+alter table public.profiles add column if not exists employee_id text;
+alter table public.profiles add column if not exists phone text;
 
 alter table public.outlet_sessions add column if not exists check_in_latitude numeric;
 alter table public.outlet_sessions add column if not exists check_in_longitude numeric;

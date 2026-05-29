@@ -3,6 +3,7 @@ const viewTitles = {
   setupFlow: "Business Setup Flow",
   field: "Mobile Field App",
   users: "User Management",
+  userDetail: "User Detail View",
   customers: "Customer Master",
   products: "Product Master",
   territories: "Area Master",
@@ -25,6 +26,7 @@ const contextActions = {
   command: { label: "Refresh Dashboard", action: renderCommandCenter },
   setupFlow: { label: "Refresh Setup", action: renderSetupFlow },
   users: { label: "Add User", target: "adminUserFullName" },
+  userDetail: { label: "Back to Users", action: () => openUsersList() },
   customers: { label: "Create Customer", target: "adminCustomerName" },
   products: { label: "Create Product", target: "adminProductName" },
   territories: { label: "Create Area", target: "territoryState" },
@@ -104,6 +106,10 @@ let adminProfile = null;
 let editingCustomerId = null;
 let editingProductId = null;
 let editingUserId = null;
+let selectedUserDetailId = null;
+let selectedUserDetail = null;
+let selectedUserDetailTab = "profile";
+let userAttendanceMonth = new Date();
 let selectedReportId = "15875";
 let reportDataCache = {
   attendance: [],
@@ -138,7 +144,7 @@ function switchView(viewId) {
     item.classList.toggle("active", item.dataset.view === viewId);
   });
 
-  document.getElementById("view-title").textContent = viewTitles[viewId];
+  document.getElementById("view-title").textContent = viewTitles[viewId] || "FieldForce AI";
   updateContextAction(viewId);
 
   if (viewId === "customers" || viewId === "products") {
@@ -359,6 +365,281 @@ function canManageUsers() {
   return adminProfile?.role === "admin";
 }
 
+function canOpenUserDetail() {
+  return ["admin", "manager"].includes(adminProfile?.role);
+}
+
+function getUserDetailIdFromPath() {
+  const match = window.location.pathname.match(/^\/admin\/user\/([^/]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function openUsersList(pushUrl = true) {
+  selectedUserDetailId = null;
+  selectedUserDetail = null;
+  selectedUserDetailTab = "profile";
+  if (pushUrl && window.location.pathname !== "/admin") {
+    window.history.pushState({}, "", "/admin");
+  }
+  switchView("users");
+}
+
+async function openUserDetail(id, pushUrl = true) {
+  if (!canOpenUserDetail()) {
+    adminToast("Access denied");
+    return;
+  }
+
+  selectedUserDetailId = id;
+  selectedUserDetailTab = "profile";
+  userAttendanceMonth = new Date();
+  if (pushUrl) window.history.pushState({}, "", `/admin/user/${encodeURIComponent(id)}`);
+  switchView("userDetail");
+  await loadAndRenderUserDetail(id);
+}
+
+async function loadAndRenderUserDetail(id) {
+  const status = document.getElementById("userDetailStatus");
+  if (status) status.textContent = "Loading selected user...";
+  try {
+    selectedUserDetail = await fetchUserDetail(id);
+    renderUserDetailHeader();
+    renderUserDetailTab();
+    if (status) status.textContent = "Profile loaded from cloud.";
+  } catch (error) {
+    if (status) status.textContent = "User detail failed to load.";
+    document.getElementById("userTabPanel").innerHTML = `<div class="empty-state"><strong>User not found.</strong><span>${error.message}</span></div>`;
+  }
+}
+
+async function fetchUserDetail(id) {
+  const cached = cachedUsers.find((user) => String(user.id) === String(id));
+  if (cached) return cached;
+
+  const users = await requestJson(`${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=*`, {
+    headers: cloudHeaders()
+  });
+  if (!users.length) throw new Error("No profile exists for this user.");
+  return users[0];
+}
+
+function renderUserDetailHeader() {
+  const user = selectedUserDetail || {};
+  const name = user.full_name || "User";
+  const status = user.status === "inactive" ? "Inactive" : "Active";
+  const initial = name.trim().charAt(0).toUpperCase() || "U";
+
+  document.getElementById("userDetailPageTitle").textContent = name;
+  document.getElementById("userDetailAvatar").textContent = initial;
+  document.getElementById("userDetailName").textContent = name;
+  document.getElementById("userDetailEmail").textContent = user.email || "-";
+  document.getElementById("userDetailRole").textContent = user.role || "-";
+  document.getElementById("userDetailEmployeeId").textContent = user.employee_id || user.employeeId || "-";
+  document.getElementById("userDetailPhone").textContent = user.phone || user.mobile || "-";
+  const tag = document.getElementById("userDetailActiveTag");
+  tag.textContent = status;
+  tag.classList.toggle("danger-tag", status === "Inactive");
+}
+
+function renderUserDetailTab() {
+  document.querySelectorAll("[data-user-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.userTab === selectedUserDetailTab);
+  });
+
+  if (selectedUserDetailTab === "profile") return renderUserProfileTab();
+  if (selectedUserDetailTab === "attendance") return renderUserAttendanceTab();
+
+  const label = {
+    orders: "Orders",
+    visits: "Visits",
+    targets: "Targets",
+    beatPlan: "Beat Plan"
+  }[selectedUserDetailTab] || "Module";
+  document.getElementById("userTabPanel").innerHTML = `<div class="empty-state"><strong>${label}</strong><span>Coming soon</span></div>`;
+}
+
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+function userField(label, value) {
+  return `<div class="profile-field"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value || "-")}</span></div>`;
+}
+
+function renderUserProfileTab(isEditing = false) {
+  const panel = document.getElementById("userTabPanel");
+  const user = selectedUserDetail || {};
+  if (!panel) return;
+
+  if (isEditing) {
+    panel.innerHTML = `
+      <div class="panel-heading">
+        <div><h2>Edit Profile</h2><p>Admin can update core user profile fields.</p></div>
+      </div>
+      <div class="profile-edit-grid">
+        <label>Full Name<input id="detailEditFullName" value="${escapeHtml(user.full_name || "")}" /></label>
+        <label>Role<select id="detailEditRole"><option value="mr">MR</option><option value="manager">Manager</option><option value="admin">Admin</option></select></label>
+        <label>Phone<input id="detailEditPhone" value="${escapeHtml(user.phone || user.mobile || "")}" placeholder="Mobile number" /></label>
+        <label>Status<select id="detailEditStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+      </div>
+      <div class="import-actions">
+        <button class="primary-action" id="saveUserDetailProfile" type="button">Save Profile</button>
+        <button class="primary-action secondary-action" id="cancelUserDetailEdit" type="button">Cancel</button>
+      </div>
+    `;
+    setValue("detailEditRole", user.role || "mr");
+    setValue("detailEditStatus", user.status === "inactive" ? "inactive" : "active");
+    document.getElementById("saveUserDetailProfile")?.addEventListener("click", saveUserDetailProfile);
+    document.getElementById("cancelUserDetailEdit")?.addEventListener("click", () => renderUserProfileTab(false));
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="panel-heading">
+      <div><h2>Profile</h2><p>Read-only employee profile and login role.</p></div>
+      <button class="table-action" id="editUserDetailProfile" type="button" ${canManageUsers() ? "" : "disabled"}>Edit</button>
+    </div>
+    <div class="profile-grid">
+      ${userField("Full Name", user.full_name)}
+      ${userField("Email / Username", user.email)}
+      ${userField("Role", user.role)}
+      ${userField("Employee ID", user.employee_id || user.employeeId)}
+      ${userField("Phone", user.phone || user.mobile)}
+      ${userField("Status", user.status === "inactive" ? "Inactive" : "Active")}
+      ${userField("Created At", formatDateTime(user.created_at))}
+      ${userField("User ID", user.id)}
+    </div>
+  `;
+  document.getElementById("editUserDetailProfile")?.addEventListener("click", () => {
+    if (!canManageUsers()) return adminToast("Only admin can edit users");
+    renderUserProfileTab(true);
+  });
+}
+
+async function saveUserDetailProfile() {
+  if (!canManageUsers()) return adminToast("Only admin can edit users");
+  if (!selectedUserDetail?.id) return;
+
+  const payload = {
+    id: selectedUserDetail.id,
+    full_name: valueOf("detailEditFullName"),
+    role: valueOf("detailEditRole"),
+    phone: valueOf("detailEditPhone"),
+    status: valueOf("detailEditStatus")
+  };
+  if (!payload.full_name) return adminToast("Full name required");
+
+  try {
+    const result = await requestAdminUsers("PATCH", payload);
+    selectedUserDetail = result.user || { ...selectedUserDetail, ...payload };
+    cachedUsers = cachedUsers.map((user) => (String(user.id) === String(selectedUserDetail.id) ? selectedUserDetail : user));
+    renderUserDetailHeader();
+    renderUserProfileTab(false);
+    adminToast("Profile updated");
+  } catch (error) {
+    adminToast(`Profile update failed: ${error.message}`);
+  }
+}
+
+function monthBounds(date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return { start, end };
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function formatTime(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+}
+
+function renderLocation(record) {
+  const lat = record?.latitude || record?.check_in_latitude || record?.check_out_latitude;
+  const lng = record?.longitude || record?.check_in_longitude || record?.check_out_longitude;
+  if (!lat || !lng) return "-";
+  return `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+}
+
+async function renderUserAttendanceTab() {
+  const panel = document.getElementById("userTabPanel");
+  if (!panel) return;
+  const { start, end } = monthBounds(userAttendanceMonth);
+  const monthLabel = userAttendanceMonth.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  panel.innerHTML = `
+    <div class="attendance-toolbar">
+      <button class="table-action" id="prevAttendanceMonth" type="button">Previous</button>
+      <h2>${monthLabel}</h2>
+      <button class="table-action" id="nextAttendanceMonth" type="button">Next</button>
+    </div>
+    <div class="table-panel"><table><thead><tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Status</th><th>Lat/Long</th></tr></thead><tbody id="userAttendanceRows"><tr><td colspan="5">Loading attendance...</td></tr></tbody></table></div>
+  `;
+  document.getElementById("prevAttendanceMonth")?.addEventListener("click", () => {
+    userAttendanceMonth = new Date(userAttendanceMonth.getFullYear(), userAttendanceMonth.getMonth() - 1, 1);
+    renderUserAttendanceTab();
+  });
+  document.getElementById("nextAttendanceMonth")?.addEventListener("click", () => {
+    userAttendanceMonth = new Date(userAttendanceMonth.getFullYear(), userAttendanceMonth.getMonth() + 1, 1);
+    renderUserAttendanceTab();
+  });
+
+  try {
+    const records = await cloudSelect("attendance");
+    const userName = (selectedUserDetail?.full_name || "").toLowerCase();
+    const monthRows = records.filter((record) => {
+      const created = new Date(record.created_at || record.attendance_time);
+      return (record.user_name || "").toLowerCase() === userName && created >= start && created <= new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
+    });
+    renderAttendanceRows(monthRows, start, end);
+  } catch {
+    document.getElementById("userAttendanceRows").innerHTML = `<tr><td colspan="5"><strong>Attendance load failed.</strong> Check authenticated read policy for attendance.</td></tr>`;
+  }
+}
+
+function renderAttendanceRows(records, start, end) {
+  const rows = document.getElementById("userAttendanceRows");
+  if (!rows) return;
+  const byDate = records.reduce((acc, record) => {
+    const key = new Date(record.created_at || record.attendance_time).toLocaleDateString("en-CA");
+    acc[key] = [...(acc[key] || []), record];
+    return acc;
+  }, {});
+
+  const days = [];
+  for (let day = 1; day <= end.getDate(); day += 1) {
+    const current = new Date(start.getFullYear(), start.getMonth(), day);
+    const key = current.toLocaleDateString("en-CA");
+    const dayRecords = (byDate[key] || []).sort((a, b) => new Date(a.created_at || a.attendance_time) - new Date(b.created_at || b.attendance_time));
+    const checkIn = dayRecords.find((item) => item.status === "Checked In") || dayRecords[0];
+    const checkOut = [...dayRecords].reverse().find((item) => item.status === "Checked Out");
+    const locationRecord = checkIn || checkOut;
+    days.push(`
+      <tr>
+        <td>${formatDate(current)}</td>
+        <td>${formatTime(checkIn?.created_at || checkIn?.attendance_time)}</td>
+        <td>${formatTime(checkOut?.created_at || checkOut?.attendance_time)}</td>
+        <td><span class="tag ${checkIn ? "" : "danger-tag"}">${checkIn ? "Present" : "Absent"}</span></td>
+        <td><span class="attendance-location">${renderLocation(locationRecord)}</span></td>
+      </tr>
+    `);
+  }
+  rows.innerHTML = days.join("");
+}
+
 async function unlockAdmin(session) {
   adminAuthSession = session;
   saveAdminAuthSession(session);
@@ -375,6 +656,10 @@ async function unlockAdmin(session) {
   document.body.classList.remove("admin-locked");
   adminToast(`Welcome ${adminProfile.full_name}`);
   initializeAdminApp();
+  const detailId = getUserDetailIdFromPath();
+  if (detailId) {
+    await openUserDetail(detailId, false);
+  }
 }
 
 async function initializeExistingAdminSession() {
@@ -906,7 +1191,7 @@ function renderUsers(users = cachedUsers) {
           const statusLabel = user.status === "inactive" ? "Inactive" : "Active";
           return `
             <tr>
-              <td><strong>${user.full_name || "-"}</strong></td>
+              <td><button class="link-action" data-open-user="${user.id}" type="button">${user.full_name || "-"}</button></td>
               <td>${user.email || "-"}</td>
               <td><span class="tag">${user.role || "-"}</span></td>
               <td><span class="tag ${user.status === "inactive" ? "danger-tag" : ""}">${statusLabel}</span></td>
@@ -922,6 +1207,9 @@ function renderUsers(users = cachedUsers) {
 
   document.querySelectorAll("[data-edit-user]").forEach((button) => {
     button.addEventListener("click", () => editUser(button.dataset.editUser));
+  });
+  document.querySelectorAll("[data-open-user]").forEach((button) => {
+    button.addEventListener("click", () => openUserDetail(button.dataset.openUser));
   });
   document.querySelectorAll("[data-toggle-user]").forEach((button) => {
     button.addEventListener("click", () => toggleUserStatus(button.dataset.toggleUser, button.dataset.nextStatus));
@@ -1503,7 +1791,30 @@ async function renderMasterData() {
 }
 
 document.querySelectorAll(".nav-item").forEach((button) => {
-  button.addEventListener("click", () => switchView(button.dataset.view));
+  button.addEventListener("click", () => {
+    if (window.location.pathname.startsWith("/admin/user/")) {
+      window.history.pushState({}, "", "/admin");
+    }
+    switchView(button.dataset.view);
+  });
+});
+
+document.getElementById("backToUsersButton")?.addEventListener("click", () => openUsersList());
+
+document.querySelectorAll("[data-user-tab]").forEach((button) => {
+  button.addEventListener("click", () => {
+    selectedUserDetailTab = button.dataset.userTab;
+    renderUserDetailTab();
+  });
+});
+
+window.addEventListener("popstate", () => {
+  const detailId = getUserDetailIdFromPath();
+  if (detailId && adminProfile) {
+    openUserDetail(detailId, false);
+  } else if (adminProfile) {
+    switchView("users");
+  }
 });
 
 document.getElementById("adminLoginButton")?.addEventListener("click", async () => {
