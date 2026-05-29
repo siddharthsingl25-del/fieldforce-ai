@@ -202,17 +202,37 @@ function showMobileView(viewId) {
     view.classList.toggle("active", view.id === viewId);
   });
 
-  document.querySelectorAll(".bottom-nav button").forEach((button) => {
+  document.querySelectorAll(".bottom-nav button, .drawer-nav button").forEach((button) => {
     button.classList.toggle("active", button.dataset.mobileView === viewId);
   });
 
   document.getElementById("mobileTitle").textContent = mobileTitles[viewId];
+  closeDrawer();
 }
 
 function renderUser() {
   document.body.classList.toggle("locked", !authSession || !state.loggedIn);
   document.getElementById("welcomeName").textContent = `Good morning, ${state.name.split(" ")[0] || "User"}`;
   document.getElementById("userRoleLabel").textContent = `${state.role} | FieldForce AI`;
+  document.getElementById("drawerUserName").textContent = state.name || "Field User";
+  document.getElementById("drawerUserRole").textContent = `${state.role || "MR"} | SPC Healthcare`;
+}
+
+function openDrawer() {
+  document.body.classList.add("drawer-open");
+}
+
+function closeDrawer() {
+  document.body.classList.remove("drawer-open");
+}
+
+function logoutMobileUser() {
+  authSession = null;
+  state.loggedIn = false;
+  saveState();
+  localStorage.removeItem(authStorageKey);
+  closeDrawer();
+  renderUser();
 }
 
 function renderCheckIn() {
@@ -655,6 +675,15 @@ async function syncFromCloud() {
 document.querySelectorAll(".bottom-nav button").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.mobileView));
 });
+
+document.querySelectorAll(".drawer-nav button, .drawer-footer button[data-mobile-view]").forEach((button) => {
+  button.addEventListener("click", () => showMobileView(button.dataset.mobileView));
+});
+
+document.getElementById("drawerOpenButton")?.addEventListener("click", openDrawer);
+document.getElementById("drawerCloseButton")?.addEventListener("click", closeDrawer);
+document.getElementById("drawerBackdrop")?.addEventListener("click", closeDrawer);
+document.getElementById("mobileLogoutButton")?.addEventListener("click", logoutMobileUser);
 
 document.querySelectorAll("[data-jump-view]").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.jumpView));

@@ -1,5 +1,6 @@
 const viewTitles = {
   command: "Manager Command Center",
+  setupFlow: "Business Setup Flow",
   field: "Mobile Field App",
   users: "User Management",
   customers: "Customer Master",
@@ -22,6 +23,7 @@ const viewTitles = {
 
 const contextActions = {
   command: { label: "Refresh Dashboard", action: renderCommandCenter },
+  setupFlow: { label: "Refresh Setup", action: renderSetupFlow },
   users: { label: "Add User", target: "adminUserFullName" },
   customers: { label: "Create Customer", target: "adminCustomerName" },
   products: { label: "Create Product", target: "adminProductName" },
@@ -141,6 +143,10 @@ function switchView(viewId) {
 
   if (viewId === "customers" || viewId === "products") {
     renderMasterData();
+  }
+
+  if (viewId === "setupFlow") {
+    renderSetupFlow();
   }
 
   if (viewId === "users") {
@@ -1065,6 +1071,47 @@ function renderCommandCenter() {
     });
 }
 
+function renderSetupFlow() {
+  const status = document.getElementById("setupFlowStatus");
+  if (status) status.textContent = "Refreshing setup data...";
+
+  Promise.all([
+    optionalCloudSelect("customers"),
+    optionalCloudSelect("territories"),
+    requestAdminUsers("GET").catch(() => ({ users: cachedUsers || [] })),
+    optionalCloudSelect("beat_plans")
+  ]).then(([customers, territories, userResult, beatPlans]) => {
+    const warehouses = customers.filter((item) => ["Distributor", "Stockist"].includes(item.type));
+    const users = userResult.users || [];
+    const mrUsers = users.filter((item) => item.role === "mr");
+    document.getElementById("setupWarehouseCount").textContent = warehouses.length;
+    document.getElementById("setupAreaCount").textContent = territories.length;
+    document.getElementById("setupMrCount").textContent = mrUsers.length;
+    document.getElementById("setupBeatCount").textContent = beatPlans.length;
+
+    const warehouseMap = document.getElementById("setupWarehouseMap");
+    if (warehouseMap) {
+      warehouseMap.innerHTML = warehouses.length
+        ? warehouses.slice(0, 12).map((item) => `<div class="master-item"><strong>${item.name}</strong><span>${item.type} | Area: ${item.area || "-"} | State: ${item.address || "-"}</span></div>`).join("")
+        : `<div class="master-item"><strong>No warehouse / stockist yet</strong><span>Create Distributor or Stockist in Customer Master.</span></div>`;
+    }
+
+    const hierarchyMap = document.getElementById("setupHierarchyMap");
+    if (hierarchyMap) {
+      const managers = users.filter((item) => item.role === "manager" || item.role === "admin");
+      hierarchyMap.innerHTML = mrUsers.length
+        ? mrUsers.slice(0, 12).map((mr) => {
+            const ownedAreas = territories.filter((area) => (area.assigned_manager || "").toLowerCase().includes((mr.full_name || "").toLowerCase()));
+            const managerLabel = managers.find((manager) => manager.role === "manager")?.full_name || "ASM / Manager pending";
+            return `<div class="master-item"><strong>${mr.full_name}</strong><span>Role: MR | Reports to: ${managerLabel} | Areas: ${ownedAreas.map((area) => area.area).join(", ") || "Map in Area Master"}</span></div>`;
+          }).join("")
+        : `<div class="master-item"><strong>No MR users yet</strong><span>Create MR users in User Management, then assign areas.</span></div>`;
+    }
+
+    if (status) status.textContent = "Setup flow synced.";
+  });
+}
+
 function renderTerritories() {
   const rows = document.getElementById("adminTerritoryRows");
   const status = document.getElementById("territorySyncStatus");
@@ -1463,6 +1510,10 @@ document.querySelectorAll("[data-refresh-master]").forEach((button) => {
 
 document.getElementById("refreshUsersButton")?.addEventListener("click", refreshUsers);
 document.getElementById("adminUserSearch")?.addEventListener("input", () => renderUsers(cachedUsers));
+document.getElementById("refreshSetupFlow")?.addEventListener("click", renderSetupFlow);
+document.querySelectorAll("[data-open-setup-view]").forEach((button) => {
+  button.addEventListener("click", () => switchView(button.dataset.openSetupView));
+});
 
 document.querySelectorAll("[data-refresh-ops]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -1826,6 +1877,7 @@ function initializeAdminApp() {
   renderVisits();
   renderProducts();
   updateContextAction("command");
+  renderSetupFlow();
   renderMasterData();
   refreshUsers();
   renderCommandCenter();

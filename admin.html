@@ -33,6 +33,7 @@
 
         <nav class="nav-list">
           <button class="nav-item active" data-view="command">Command</button>
+          <button class="nav-item" data-view="setupFlow">Setup Flow</button>
           <button class="nav-item" data-view="field">Field App</button>
           <button class="nav-item" data-view="users">User Management</button>
           <button class="nav-item" data-view="customers">Customers</button>
@@ -208,6 +209,53 @@
                 <span>Local language UI</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section class="view" id="setupFlow">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Start here</p>
+              <h2>Business Setup Flow</h2>
+              <p id="setupFlowStatus">Create warehouses, areas, stockists, users, then map hierarchy and beat ownership.</p>
+            </div>
+            <button class="primary-action" id="refreshSetupFlow">Refresh Setup</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Warehouses / Stockists</span><strong id="setupWarehouseCount">0</strong><small>Distributor and stockist master</small></article>
+            <article class="metric"><span>Areas</span><strong id="setupAreaCount">0</strong><small>State, city, area, territory</small></article>
+            <article class="metric"><span>MR Users</span><strong id="setupMrCount">0</strong><small>Field users mapped to managers</small></article>
+            <article class="metric"><span>Beat Plans</span><strong id="setupBeatCount">0</strong><small>Daily route mapping</small></article>
+          </div>
+          <div class="dashboard-grid three">
+            <section class="panel setup-step">
+              <span>1</span>
+              <h2>Create Warehouse / Stockist</h2>
+              <p>Add stockists, distributors, warehouses, and their operating area.</p>
+              <button class="primary-action" data-open-setup-view="customers">Open Customer Master</button>
+            </section>
+            <section class="panel setup-step">
+              <span>2</span>
+              <h2>Create Area</h2>
+              <p>Create state, city, area, territory, and assign ASM/RM owner.</p>
+              <button class="primary-action" data-open-setup-view="territories">Open Area Master</button>
+            </section>
+            <section class="panel setup-step">
+              <span>3</span>
+              <h2>Create Sales Users</h2>
+              <p>Create MR, manager, and admin login users with active/inactive status.</p>
+              <button class="primary-action" data-open-setup-view="users">Open User Management</button>
+            </section>
+          </div>
+          <div class="dashboard-grid">
+            <section class="panel">
+              <h2>Warehouse / Area Mapping</h2>
+              <div class="master-list" id="setupWarehouseMap"></div>
+            </section>
+            <section class="panel">
+              <h2>Sales Hierarchy Mapping</h2>
+              <div class="master-list" id="setupHierarchyMap"></div>
+            </section>
           </div>
         </section>
 

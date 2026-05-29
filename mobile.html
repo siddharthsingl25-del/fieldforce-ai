@@ -30,7 +30,35 @@
     </section>
 
     <main class="mobile-app">
+      <div class="drawer-backdrop" id="drawerBackdrop"></div>
+      <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile modules">
+        <div class="drawer-profile">
+          <div class="drawer-avatar">FF</div>
+          <div>
+            <strong id="drawerUserName">Field User</strong>
+            <span id="drawerUserRole">MR</span>
+          </div>
+          <button class="drawer-close" id="drawerCloseButton" aria-label="Close menu">x</button>
+        </div>
+        <nav class="drawer-nav">
+          <button class="active" data-mobile-view="m-home">Today</button>
+          <button data-mobile-view="m-beat">Outlet / Beat</button>
+          <button data-mobile-view="m-visit">Start Call / Visit</button>
+          <button data-mobile-view="m-customers">Customers</button>
+          <button data-mobile-view="m-products">Products & Schemes</button>
+          <button data-mobile-view="m-order">Order Booking</button>
+          <button data-mobile-view="m-rewards">Rewards</button>
+          <button data-mobile-view="m-ai">AI Assistant</button>
+        </nav>
+        <div class="drawer-footer">
+          <button data-mobile-view="m-home">My Info</button>
+          <button data-mobile-view="m-visit">EOD</button>
+          <button id="mobileLogoutButton">Logout</button>
+          <span>FieldForce AI</span>
+        </div>
+      </aside>
       <header class="mobile-header">
+        <button class="menu-button" id="drawerOpenButton" aria-label="Open menu">☰</button>
         <div>
           <p id="userRoleLabel">FieldForce AI</p>
           <h1 id="mobileTitle">Today</h1>

@@ -763,6 +763,27 @@ th {
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.7fr);
 }
 
+.setup-step {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.setup-step > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e4f7f0;
+  color: #0d614b;
+  font-weight: 900;
+}
+
+.setup-step p {
+  color: var(--muted);
+}
+
 .builder-stack {
   display: grid;
   gap: 16px;
