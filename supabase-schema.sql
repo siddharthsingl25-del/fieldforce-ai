@@ -202,6 +202,13 @@ create table if not exists public.collections (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text not null,
+  role text not null check (role in ('admin', 'manager', 'mr')),
+  created_at timestamptz not null default now()
+);
+
 alter table public.outlet_sessions add column if not exists check_in_latitude numeric;
 alter table public.outlet_sessions add column if not exists check_in_longitude numeric;
 alter table public.outlet_sessions add column if not exists check_out_latitude numeric;
@@ -224,6 +231,7 @@ alter table public.retail_audits enable row level security;
 alter table public.announcements enable row level security;
 alter table public.expenses enable row level security;
 alter table public.collections enable row level security;
+alter table public.profiles enable row level security;
 
 drop policy if exists "testing read customers" on public.customers;
 drop policy if exists "testing insert customers" on public.customers;
@@ -314,3 +322,166 @@ create policy "testing insert expenses" on public.expenses for insert to anon wi
 
 create policy "testing read collections" on public.collections for select to anon using (true);
 create policy "testing insert collections" on public.collections for insert to anon with check (true);
+
+drop policy if exists "testing read customers" on public.customers;
+drop policy if exists "testing insert customers" on public.customers;
+drop policy if exists "testing read products" on public.products;
+drop policy if exists "testing insert products" on public.products;
+drop policy if exists "testing read visits" on public.visits;
+drop policy if exists "testing insert visits" on public.visits;
+drop policy if exists "testing read outlet sessions" on public.outlet_sessions;
+drop policy if exists "testing insert outlet sessions" on public.outlet_sessions;
+drop policy if exists "testing read orders" on public.orders;
+drop policy if exists "testing insert orders" on public.orders;
+drop policy if exists "testing read order items" on public.order_items;
+drop policy if exists "testing insert order items" on public.order_items;
+drop policy if exists "testing read attendance" on public.attendance;
+drop policy if exists "testing insert attendance" on public.attendance;
+drop policy if exists "testing read beat plans" on public.beat_plans;
+drop policy if exists "testing insert beat plans" on public.beat_plans;
+drop policy if exists "testing update beat plans" on public.beat_plans;
+drop policy if exists "testing read tasks" on public.tasks;
+drop policy if exists "testing insert tasks" on public.tasks;
+drop policy if exists "testing update tasks" on public.tasks;
+drop policy if exists "testing read schemes" on public.schemes;
+drop policy if exists "testing insert schemes" on public.schemes;
+drop policy if exists "testing read territories" on public.territories;
+drop policy if exists "testing insert territories" on public.territories;
+drop policy if exists "testing read targets" on public.targets;
+drop policy if exists "testing insert targets" on public.targets;
+drop policy if exists "testing read promotions" on public.promotions;
+drop policy if exists "testing insert promotions" on public.promotions;
+drop policy if exists "testing read retail audits" on public.retail_audits;
+drop policy if exists "testing insert retail audits" on public.retail_audits;
+drop policy if exists "testing read announcements" on public.announcements;
+drop policy if exists "testing insert announcements" on public.announcements;
+drop policy if exists "testing read expenses" on public.expenses;
+drop policy if exists "testing insert expenses" on public.expenses;
+drop policy if exists "testing read collections" on public.collections;
+drop policy if exists "testing insert collections" on public.collections;
+
+drop policy if exists "authenticated read profiles" on public.profiles;
+drop policy if exists "user insert own profile" on public.profiles;
+drop policy if exists "user update own profile" on public.profiles;
+create policy "authenticated read profiles" on public.profiles for select to authenticated using (true);
+create policy "user insert own profile" on public.profiles for insert to authenticated with check (auth.uid() = id);
+create policy "user update own profile" on public.profiles for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+
+drop policy if exists "authenticated read customers" on public.customers;
+drop policy if exists "authenticated insert customers" on public.customers;
+drop policy if exists "authenticated update customers" on public.customers;
+create policy "authenticated read customers" on public.customers for select to authenticated using (true);
+create policy "authenticated insert customers" on public.customers for insert to authenticated with check (true);
+create policy "authenticated update customers" on public.customers for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read products" on public.products;
+drop policy if exists "authenticated insert products" on public.products;
+drop policy if exists "authenticated update products" on public.products;
+create policy "authenticated read products" on public.products for select to authenticated using (true);
+create policy "authenticated insert products" on public.products for insert to authenticated with check (true);
+create policy "authenticated update products" on public.products for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read visits" on public.visits;
+drop policy if exists "authenticated insert visits" on public.visits;
+drop policy if exists "authenticated update visits" on public.visits;
+create policy "authenticated read visits" on public.visits for select to authenticated using (true);
+create policy "authenticated insert visits" on public.visits for insert to authenticated with check (true);
+create policy "authenticated update visits" on public.visits for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read outlet sessions" on public.outlet_sessions;
+drop policy if exists "authenticated insert outlet sessions" on public.outlet_sessions;
+drop policy if exists "authenticated update outlet sessions" on public.outlet_sessions;
+create policy "authenticated read outlet sessions" on public.outlet_sessions for select to authenticated using (true);
+create policy "authenticated insert outlet sessions" on public.outlet_sessions for insert to authenticated with check (true);
+create policy "authenticated update outlet sessions" on public.outlet_sessions for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read orders" on public.orders;
+drop policy if exists "authenticated insert orders" on public.orders;
+drop policy if exists "authenticated update orders" on public.orders;
+create policy "authenticated read orders" on public.orders for select to authenticated using (true);
+create policy "authenticated insert orders" on public.orders for insert to authenticated with check (true);
+create policy "authenticated update orders" on public.orders for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read order items" on public.order_items;
+drop policy if exists "authenticated insert order items" on public.order_items;
+drop policy if exists "authenticated update order items" on public.order_items;
+create policy "authenticated read order items" on public.order_items for select to authenticated using (true);
+create policy "authenticated insert order items" on public.order_items for insert to authenticated with check (true);
+create policy "authenticated update order items" on public.order_items for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read attendance" on public.attendance;
+drop policy if exists "authenticated insert attendance" on public.attendance;
+drop policy if exists "authenticated update attendance" on public.attendance;
+create policy "authenticated read attendance" on public.attendance for select to authenticated using (true);
+create policy "authenticated insert attendance" on public.attendance for insert to authenticated with check (true);
+create policy "authenticated update attendance" on public.attendance for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read beat plans" on public.beat_plans;
+drop policy if exists "authenticated insert beat plans" on public.beat_plans;
+drop policy if exists "authenticated update beat plans" on public.beat_plans;
+create policy "authenticated read beat plans" on public.beat_plans for select to authenticated using (true);
+create policy "authenticated insert beat plans" on public.beat_plans for insert to authenticated with check (true);
+create policy "authenticated update beat plans" on public.beat_plans for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read tasks" on public.tasks;
+drop policy if exists "authenticated insert tasks" on public.tasks;
+drop policy if exists "authenticated update tasks" on public.tasks;
+create policy "authenticated read tasks" on public.tasks for select to authenticated using (true);
+create policy "authenticated insert tasks" on public.tasks for insert to authenticated with check (true);
+create policy "authenticated update tasks" on public.tasks for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read schemes" on public.schemes;
+drop policy if exists "authenticated insert schemes" on public.schemes;
+drop policy if exists "authenticated update schemes" on public.schemes;
+create policy "authenticated read schemes" on public.schemes for select to authenticated using (true);
+create policy "authenticated insert schemes" on public.schemes for insert to authenticated with check (true);
+create policy "authenticated update schemes" on public.schemes for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read territories" on public.territories;
+drop policy if exists "authenticated insert territories" on public.territories;
+drop policy if exists "authenticated update territories" on public.territories;
+create policy "authenticated read territories" on public.territories for select to authenticated using (true);
+create policy "authenticated insert territories" on public.territories for insert to authenticated with check (true);
+create policy "authenticated update territories" on public.territories for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read targets" on public.targets;
+drop policy if exists "authenticated insert targets" on public.targets;
+drop policy if exists "authenticated update targets" on public.targets;
+create policy "authenticated read targets" on public.targets for select to authenticated using (true);
+create policy "authenticated insert targets" on public.targets for insert to authenticated with check (true);
+create policy "authenticated update targets" on public.targets for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read promotions" on public.promotions;
+drop policy if exists "authenticated insert promotions" on public.promotions;
+drop policy if exists "authenticated update promotions" on public.promotions;
+create policy "authenticated read promotions" on public.promotions for select to authenticated using (true);
+create policy "authenticated insert promotions" on public.promotions for insert to authenticated with check (true);
+create policy "authenticated update promotions" on public.promotions for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read retail audits" on public.retail_audits;
+drop policy if exists "authenticated insert retail audits" on public.retail_audits;
+drop policy if exists "authenticated update retail audits" on public.retail_audits;
+create policy "authenticated read retail audits" on public.retail_audits for select to authenticated using (true);
+create policy "authenticated insert retail audits" on public.retail_audits for insert to authenticated with check (true);
+create policy "authenticated update retail audits" on public.retail_audits for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read announcements" on public.announcements;
+drop policy if exists "authenticated insert announcements" on public.announcements;
+drop policy if exists "authenticated update announcements" on public.announcements;
+create policy "authenticated read announcements" on public.announcements for select to authenticated using (true);
+create policy "authenticated insert announcements" on public.announcements for insert to authenticated with check (true);
+create policy "authenticated update announcements" on public.announcements for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read expenses" on public.expenses;
+drop policy if exists "authenticated insert expenses" on public.expenses;
+drop policy if exists "authenticated update expenses" on public.expenses;
+create policy "authenticated read expenses" on public.expenses for select to authenticated using (true);
+create policy "authenticated insert expenses" on public.expenses for insert to authenticated with check (true);
+create policy "authenticated update expenses" on public.expenses for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read collections" on public.collections;
+drop policy if exists "authenticated insert collections" on public.collections;
+drop policy if exists "authenticated update collections" on public.collections;
+create policy "authenticated read collections" on public.collections for select to authenticated using (true);
+create policy "authenticated insert collections" on public.collections for insert to authenticated with check (true);
+create policy "authenticated update collections" on public.collections for update to authenticated using (true) with check (true);

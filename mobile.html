@@ -15,20 +15,17 @@
       <div class="login-card">
         <span class="pill">FieldForce AI</span>
         <h1>Start your field day</h1>
-        <p>Select a demo role to enter the mobile app.</p>
+        <p>Login with your SPC Healthcare email and password.</p>
         <label>
-          User Role
-          <select id="roleSelect">
-            <option value="MR">Medical Representative</option>
-            <option value="SO">FMCG Sales Officer</option>
-            <option value="ASM">Area Sales Manager</option>
-          </select>
+          Email
+          <input id="loginEmailInput" type="email" placeholder="name@spchealthcare.com" />
         </label>
         <label>
-          Name
-          <input id="userNameInput" value="Riya Sharma" />
+          Password
+          <input id="loginPasswordInput" type="password" placeholder="Password" />
         </label>
-        <button class="submit-button" id="loginButton">Login Demo</button>
+        <button class="submit-button" id="loginButton">Login</button>
+        <p id="loginStatus"></p>
       </div>
     </section>
 

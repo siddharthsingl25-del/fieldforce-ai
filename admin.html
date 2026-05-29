@@ -9,7 +9,18 @@
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css?v=cloud-2" />
   </head>
-  <body>
+  <body class="admin-locked">
+    <section class="admin-login-screen" id="adminLoginScreen">
+      <div class="login-card">
+        <span class="pill">FieldForce AI Admin</span>
+        <h1>Admin Login</h1>
+        <p>Login with your SPC Healthcare admin or manager account.</p>
+        <label>Email<input id="adminLoginEmail" type="email" placeholder="admin@spchealthcare.com" /></label>
+        <label>Password<input id="adminLoginPassword" type="password" placeholder="Password" /></label>
+        <button class="primary-action" id="adminLoginButton">Login</button>
+        <p id="adminLoginStatus"></p>
+      </div>
+    </section>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Main navigation">
         <div class="brand">

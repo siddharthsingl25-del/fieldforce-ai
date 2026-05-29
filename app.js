@@ -69,6 +69,7 @@ const sampleCsv = {
 };
 
 const storageKey = "fieldforce-mobile-demo";
+const adminAuthStorageKey = "fieldforce-admin-auth";
 const supabaseUrl = "https://uywrkixlytrcepuextiq.supabase.co";
 const supabaseKey = "sb_publishable_Mu7SoauvKLHuka9L5ZamVQ_8SJHs_1y";
 const cloudEnabled = Boolean(supabaseUrl && supabaseKey);
@@ -93,6 +94,8 @@ let cachedCustomers = [];
 let cachedProducts = [];
 let cachedTerritories = [];
 let discountAssignments = [];
+let adminAuthSession = loadAdminAuthSession();
+let adminProfile = null;
 
 const reportCatalog = [
   ["5324", "User Performance Dashboard", "Attendance, calls, productivity, outlet time, and KM by user"],
@@ -193,12 +196,40 @@ function loadMobileState() {
   }
 }
 
+function loadAdminAuthSession() {
+  const saved = localStorage.getItem(adminAuthStorageKey);
+  return saved ? JSON.parse(saved) : null;
+}
+
+function saveAdminAuthSession(session) {
+  localStorage.setItem(adminAuthStorageKey, JSON.stringify(session));
+}
+
 function cloudHeaders() {
   return {
     apikey: supabaseKey,
-    Authorization: `Bearer ${supabaseKey}`,
+    Authorization: `Bearer ${adminAuthSession?.access_token || supabaseKey}`,
     "Content-Type": "application/json"
   };
+}
+
+async function signInWithPassword(email, password) {
+  return requestJson(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
+}
+
+async function loadProfile(userId) {
+  const profiles = await requestJson(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`, {
+    headers: cloudHeaders()
+  });
+  if (!profiles.length) throw new Error("Profile not found");
+  return profiles[0];
 }
 
 function requestJson(url, options = {}) {
@@ -249,6 +280,32 @@ async function cloudInsert(table, payload) {
     headers: { ...cloudHeaders(), Prefer: "return=representation" },
     body: JSON.stringify(payload)
   });
+}
+
+async function unlockAdmin(session) {
+  adminAuthSession = session;
+  saveAdminAuthSession(session);
+  adminProfile = await loadProfile(session.user.id);
+
+  if (!["admin", "manager"].includes(adminProfile.role)) {
+    throw new Error("Access denied");
+  }
+
+  document.body.classList.remove("admin-locked");
+  adminToast(`Welcome ${adminProfile.full_name}`);
+  initializeAdminApp();
+}
+
+async function initializeExistingAdminSession() {
+  if (!adminAuthSession) return;
+
+  try {
+    await unlockAdmin(adminAuthSession);
+  } catch {
+    adminAuthSession = null;
+    localStorage.removeItem(adminAuthStorageKey);
+    document.body.classList.add("admin-locked");
+  }
 }
 
 function setValue(id, value = "") {
@@ -1029,6 +1086,23 @@ document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
 });
 
+document.getElementById("adminLoginButton")?.addEventListener("click", async () => {
+  const status = document.getElementById("adminLoginStatus");
+  const email = valueOf("adminLoginEmail");
+  const password = document.getElementById("adminLoginPassword")?.value || "";
+
+  try {
+    if (status) status.textContent = "Logging in...";
+    const session = await signInWithPassword(email, password);
+    await unlockAdmin(session);
+    if (status) status.textContent = "";
+  } catch (error) {
+    adminAuthSession = null;
+    localStorage.removeItem(adminAuthStorageKey);
+    if (status) status.textContent = error.message === "Access denied" ? "Access denied" : "Login failed. Check email/password or profile.";
+  }
+});
+
 document.querySelectorAll("[data-refresh-master]").forEach((button) => {
   button.addEventListener("click", renderMasterData);
 });
@@ -1337,20 +1411,24 @@ document.getElementById("adminSaveScheme")?.addEventListener("click", async () =
   }
 });
 
-renderVisits();
-renderProducts();
-updateContextAction("command");
-renderMasterData();
-renderCommandCenter();
-renderCloudSales();
-renderBeatPlans();
-renderTasks();
-renderTerritories();
-renderSchemes();
-renderReportDirectory();
-renderDiscountRows();
-renderTargets();
-renderPromotions();
-renderAudits();
-renderAnnouncements();
-renderReports();
+function initializeAdminApp() {
+  renderVisits();
+  renderProducts();
+  updateContextAction("command");
+  renderMasterData();
+  renderCommandCenter();
+  renderCloudSales();
+  renderBeatPlans();
+  renderTasks();
+  renderTerritories();
+  renderSchemes();
+  renderReportDirectory();
+  renderDiscountRows();
+  renderTargets();
+  renderPromotions();
+  renderAudits();
+  renderAnnouncements();
+  renderReports();
+}
+
+initializeExistingAdminSession();

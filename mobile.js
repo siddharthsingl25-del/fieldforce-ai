@@ -1,4 +1,5 @@
 const storageKey = "fieldforce-mobile-demo";
+const authStorageKey = "fieldforce-mobile-auth";
 const supabaseUrl = "https://uywrkixlytrcepuextiq.supabase.co";
 const supabaseKey = "sb_publishable_Mu7SoauvKLHuka9L5ZamVQ_8SJHs_1y";
 const cloudEnabled = Boolean(supabaseUrl && supabaseKey);
@@ -37,7 +38,17 @@ function saveState() {
   localStorage.setItem(storageKey, JSON.stringify(state));
 }
 
+function loadAuthSession() {
+  const saved = localStorage.getItem(authStorageKey);
+  return saved ? JSON.parse(saved) : null;
+}
+
+function saveAuthSession(session) {
+  localStorage.setItem(authStorageKey, JSON.stringify(session));
+}
+
 let state = loadState();
+let authSession = loadAuthSession();
 let orderSearch = "";
 let orderCartItems = [];
 let activeOutletSession = null;
@@ -46,10 +57,35 @@ let outletTimer = null;
 function cloudHeaders(extra = {}) {
   return {
     apikey: supabaseKey,
-    Authorization: `Bearer ${supabaseKey}`,
+    Authorization: `Bearer ${authSession?.access_token || supabaseKey}`,
     "Content-Type": "application/json",
     ...extra
   };
+}
+
+async function signInWithPassword(email, password) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  if (!response.ok) throw new Error("Login failed");
+  return response.json();
+}
+
+async function loadProfile(userId) {
+  const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=*`, {
+    headers: cloudHeaders()
+  });
+
+  if (!response.ok) throw new Error("Profile not found");
+  const profiles = await response.json();
+  if (!profiles.length) throw new Error("Profile not found");
+  return profiles[0];
 }
 
 async function cloudSelect(table) {
@@ -137,11 +173,9 @@ function showMobileView(viewId) {
 }
 
 function renderUser() {
-  document.body.classList.toggle("locked", !state.loggedIn);
+  document.body.classList.toggle("locked", !authSession || !state.loggedIn);
   document.getElementById("welcomeName").textContent = `Good morning, ${state.name.split(" ")[0] || "User"}`;
   document.getElementById("userRoleLabel").textContent = `${state.role} | FieldForce AI`;
-  document.getElementById("roleSelect").value = state.role;
-  document.getElementById("userNameInput").value = state.name;
 }
 
 function renderCheckIn() {
@@ -535,13 +569,28 @@ document.querySelectorAll("[data-jump-view]").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.jumpView));
 });
 
-document.getElementById("loginButton").addEventListener("click", () => {
-  state.loggedIn = true;
-  state.name = document.getElementById("userNameInput").value.trim() || "Riya Sharma";
-  state.role = document.getElementById("roleSelect").value;
-  saveState();
-  renderUser();
-  toast("Login saved");
+document.getElementById("loginButton").addEventListener("click", async () => {
+  const status = document.getElementById("loginStatus");
+  const email = document.getElementById("loginEmailInput").value.trim();
+  const password = document.getElementById("loginPasswordInput").value;
+
+  try {
+    if (status) status.textContent = "Logging in...";
+    authSession = await signInWithPassword(email, password);
+    saveAuthSession(authSession);
+    const profile = await loadProfile(authSession.user.id);
+    state.loggedIn = true;
+    state.name = profile.full_name;
+    state.role = profile.role;
+    saveState();
+    renderUser();
+    await syncFromCloud();
+    toast("Login successful");
+  } catch {
+    authSession = null;
+    localStorage.removeItem(authStorageKey);
+    if (status) status.textContent = "Login failed. Check email/password or profile.";
+  }
 });
 
 document.getElementById("checkButton").addEventListener("click", async () => {
@@ -829,7 +878,9 @@ renderSchemes();
 renderPromotions();
 renderAnnouncements();
 renderOrderTotal();
-syncFromCloud();
+if (authSession && state.loggedIn) {
+  syncFromCloud();
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
