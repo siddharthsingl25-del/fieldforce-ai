@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
     const fullName = String(body.full_name || "").trim();
     const role = String(body.role || "").trim();
     const status = String(body.status || "").trim();
+    const password = String(body.password || "");
 
     if (!id) return json({ error: "Missing user id" }, 400);
     if (id === adminCheck.userId && status === "inactive") {
@@ -88,8 +89,20 @@ Deno.serve(async (req) => {
     if (fullName) update.full_name = fullName;
     if (["admin", "manager", "mr"].includes(role)) update.role = role;
     if (["active", "inactive"].includes(status)) update.status = status;
+    if (password && password.length < 6) return json({ error: "Password must be at least 6 characters" }, 400);
 
-    if (!Object.keys(update).length) return json({ error: "No changes provided" }, 400);
+    if (!Object.keys(update).length && !password) return json({ error: "No changes provided" }, 400);
+
+    if (password) {
+      const { error: passwordError } = await adminClient.auth.admin.updateUserById(id, { password });
+      if (passwordError) return json({ error: passwordError.message }, 400);
+    }
+
+    if (!Object.keys(update).length) {
+      const { data, error } = await adminClient.from("profiles").select("*").eq("id", id).single();
+      if (error) return json({ error: error.message }, 400);
+      return json({ user: data }, 200);
+    }
 
     const { data, error } = await adminClient.from("profiles").update(update).eq("id", id).select().single();
     if (error) return json({ error: error.message }, 400);

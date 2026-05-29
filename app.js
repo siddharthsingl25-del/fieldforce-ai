@@ -932,8 +932,8 @@ function editUser(id) {
   if (emailInput) emailInput.disabled = true;
   const passwordInput = document.getElementById("adminUserPassword");
   if (passwordInput) {
-    passwordInput.disabled = true;
-    passwordInput.placeholder = "Password cannot be changed here";
+    passwordInput.disabled = false;
+    passwordInput.placeholder = "New password optional";
   }
   const saveButton = document.getElementById("adminSaveUser");
   if (saveButton) saveButton.textContent = "Update User";
@@ -1574,11 +1574,16 @@ document.getElementById("adminSaveUser")?.addEventListener("click", async () => 
 
   try {
     if (editingUserId) {
-      await requestAdminUsers("PATCH", {
+      const payload = {
         id: editingUserId,
         full_name: fullName,
         role
-      });
+      };
+      if (password) {
+        if (password.length < 6) return adminToast("Password must be at least 6 characters");
+        payload.password = password;
+      }
+      await requestAdminUsers("PATCH", payload);
       adminToast("User updated");
     } else {
       await createAuthUser({
