@@ -1,0 +1,155 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Length 4239 >>
+stream
+BT /F2 24 Tf 180 800 Td (FieldForce AI) Tj ET
+BT /F2 13 Tf 116 770 Td (Product Design / Product Requirement Document \(PDR / PRD\)) Tj ET
+BT /F1 10 Tf 54 750 Td (Pharma + FMCG Field Force Management Platform | Mobile App + Admin Panel + Cloud Backend) Tj ET
+BT /F2 14 Tf 54 728 Td (1. Product Vision) Tj ET
+BT /F1 10 Tf 54 708 Td (FieldForce AI is a mobile-first field force management ecosystem for Pharma and FMCG sales) Tj ET
+BT /F1 10 Tf 54 694 Td (teams. It manages attendance, GPS tracking, beat plans, outlet visits, order booking, sales) Tj ET
+BT /F1 10 Tf 54 680 Td (reporting, schemes, targets, incentives, gamification, product promotions, FMCG retail) Tj ET
+BT /F1 10 Tf 54 666 Td (audits, communication, and AI-assisted field execution.) Tj ET
+BT /F1 10 Tf 66 652 Td (- Primary users: MR, ASM, RM, telecalling team, FMCG sales team, distributors, stockists,) Tj ET
+BT /F1 10 Tf 66 638 Td (  admin, and management.) Tj ET
+BT /F1 10 Tf 66 624 Td (- Current MVP is suitable for pilot testing with 2-3 field users.) Tj ET
+BT /F1 10 Tf 66 610 Td (- Long-term direction is a flexible FieldAssist/Bizom/BeatRoute style operating system) Tj ET
+BT /F1 10 Tf 66 596 Td (  with stronger AI and gamification.) Tj ET
+BT /F2 14 Tf 54 574 Td (2. Current MVP Modules) Tj ET
+BT /F1 10 Tf 54 554 Td (Mobile Attendance: GPS check-in/check-out base workflow and cloud attendance save.) Tj ET
+BT /F1 10 Tf 54 540 Td (Outlet Session: start outlet check-in, check-out, time at outlet, KM entry, cloud report.) Tj ET
+BT /F1 10 Tf 54 526 Td (Visit Reporting: customer selection, outcome, notes, and DCR cloud sync.) Tj ET
+BT /F1 10 Tf 54 512 Td (Order Booking: customer dropdown, product search, quantity, order total, cloud save.) Tj ET
+BT /F1 10 Tf 54 498 Td (Customer Master: admin/mobile customer add, search, cloud listing, CSV import.) Tj ET
+BT /F1 10 Tf 54 484 Td (Product Master: admin create/import; mobile read-only product details and order usage.) Tj ET
+BT /F1 10 Tf 54 470 Td (Beat Plans, Schemes, Reports, Targets, Promotions, FMCG Audit, Communication and CSV Import) Tj ET
+BT /F1 10 Tf 54 456 Td (foundation are added.) Tj ET
+BT /F2 14 Tf 54 434 Td (3. Field User Workflow) Tj ET
+BT /F1 10 Tf 66 414 Td (1. Open mobile app and login with user name and role.) Tj ET
+BT /F1 10 Tf 66 400 Td (2. Mark GPS Check In to start field day.) Tj ET
+BT /F1 10 Tf 66 386 Td (3. Open Beat Plan and review planned customers/outlets/doctors.) Tj ET
+BT /F1 10 Tf 66 372 Td (4. Select customer in Visit screen and tap Start Outlet Check-In.) Tj ET
+BT /F1 10 Tf 66 358 Td (5. Enter KM from last outlet and tap Check Out Outlet.) Tj ET
+BT /F1 10 Tf 66 344 Td (6. Submit Visit Report, Book Order, submit FMCG retail audit where required, then end) Tj ET
+BT /F1 10 Tf 66 330 Td (   day with GPS Check Out.) Tj ET
+BT /F2 14 Tf 54 308 Td (4. Admin Workflow) Tj ET
+BT /F1 10 Tf 66 288 Td (7. Create or import customer master and product master.) Tj ET
+BT /F1 10 Tf 66 274 Td (8. Create territory/state/area mapping and transfer areas when needed.) Tj ET
+BT /F1 10 Tf 66 260 Td (9. Create beat plans and assign them to field users.) Tj ET
+BT /F1 10 Tf 66 246 Td (10. Create schemes, discounts, and product promotion campaigns.) Tj ET
+BT /F1 10 Tf 66 232 Td (11. Set monthly, product, team, and territory targets.) Tj ET
+BT /F1 10 Tf 66 218 Td (12. Publish announcements and training messages.) Tj ET
+BT /F1 10 Tf 66 204 Td (13. Review visits, orders, attendance, outlet time, KM, retail audits, and performance) Tj ET
+BT /F1 10 Tf 66 190 Td (   reports.) Tj ET
+BT /F2 14 Tf 54 168 Td (5. Bulk Data Import Procedure) Tj ET
+BT /F1 10 Tf 54 148 Td (Customers CSV columns: type, name, mobile, state, area, customer_class, specialty,) Tj ET
+BT /F1 10 Tf 54 134 Td (outstanding. Required field: name.) Tj ET
+BT /F1 10 Tf 54 120 Td (Products CSV columns: name, composition, category, pack, mrp, sale_rate, scheme, stock.) Tj ET
+BT /F1 10 Tf 54 106 Td (Required field: name.) Tj ET
+BT /F1 10 Tf 54 92 Td (Areas CSV columns: state, city, area, territory, assigned_manager. Required field: area.) Tj ET
+BT /F1 10 Tf 54 78 Td (Beat Plans CSV columns: title, assigned_to, area, customer, planned_date, sequence_no.) Tj ET
+BT /F1 10 Tf 54 64 Td (Required field: title.) Tj ET
+endstream
+endobj
+4 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+endobj
+5 0 obj
+<< /Length 4263 >>
+stream
+BT /F1 10 Tf 54 800 Td (Tasks CSV columns: title, assigned_to, priority, due_date. Schemes CSV columns: title,) Tj ET
+BT /F1 10 Tf 54 786 Td (scheme_type, product, customer_segment, rule_text.) Tj ET
+BT /F1 10 Tf 66 772 Td (14. Open Admin Panel and go to the required module.) Tj ET
+BT /F1 10 Tf 66 758 Td (15. Click Sample CSV and download the format.) Tj ET
+BT /F1 10 Tf 66 744 Td (16. Fill your data in the same columns without renaming headers.) Tj ET
+BT /F1 10 Tf 66 730 Td (17. Click Import CSV and upload the completed CSV file.) Tj ET
+BT /F1 10 Tf 66 716 Td (18. After import, the module refreshes automatically. Mobile app will show synced data) Tj ET
+BT /F1 10 Tf 66 702 Td (   after refresh/open.) Tj ET
+BT /F2 14 Tf 54 680 Td (6. Recommended Scalable Architecture) Tj ET
+BT /F1 10 Tf 54 660 Td (Mobile App: current PWA; future React Native or Flutter native app.) Tj ET
+BT /F1 10 Tf 54 646 Td (Admin Panel: current static web app; future Next.js management portal.) Tj ET
+BT /F1 10 Tf 54 632 Td (Backend: Supabase REST now; future Node/NestJS service layer for enterprise APIs.) Tj ET
+BT /F1 10 Tf 54 618 Td (Database: PostgreSQL/Supabase with RLS, audit logs, multi-company support.) Tj ET
+BT /F1 10 Tf 54 604 Td (Realtime: Supabase Realtime/WebSockets for live tracking and notifications.) Tj ET
+BT /F1 10 Tf 54 590 Td (Notifications: FCM, WhatsApp API, SMS gateway.) Tj ET
+BT /F1 10 Tf 54 576 Td (AI: OpenAI APIs, OCR, prediction models for route suggestions, sales assistant, stock) Tj ET
+BT /F1 10 Tf 54 562 Td (recommendations.) Tj ET
+BT /F2 14 Tf 54 540 Td (7. Database Modules) Tj ET
+BT /F1 10 Tf 66 520 Td (- Current: customers, products, visits, orders, attendance, outlet_sessions.) Tj ET
+BT /F1 10 Tf 66 506 Td (- Operations: beat_plans, tasks, schemes, territories.) Tj ET
+BT /F1 10 Tf 66 492 Td (- Enterprise foundation: targets, promotions, retail_audits, announcements, expenses,) Tj ET
+BT /F1 10 Tf 66 478 Td (  collections.) Tj ET
+BT /F1 10 Tf 66 464 Td (- Future: companies, users, roles, permissions, audit_logs, invoices, payments, rewards,) Tj ET
+BT /F1 10 Tf 66 450 Td (  incentives, location_points.) Tj ET
+BT /F2 14 Tf 54 428 Td (8. Roadmap) Tj ET
+BT /F1 10 Tf 54 408 Td (Pilot: 2-3 MR testing, product/customer import, beat plan, attendance, visits, orders,) Tj ET
+BT /F1 10 Tf 54 394 Td (outlet time and KM tracking.) Tj ET
+BT /F1 10 Tf 54 380 Td (Operations: role-based login, approvals, expense/collection workflows, returns, invoice) Tj ET
+BT /F1 10 Tf 54 366 Td (visibility, distributor portal.) Tj ET
+BT /F1 10 Tf 54 352 Td (Scale: multi-company, hierarchy, audit logs, background GPS, fake GPS detection, offline) Tj ET
+BT /F1 10 Tf 54 338 Td (sync engine.) Tj ET
+BT /F1 10 Tf 54 324 Td (AI: predictive sales, missed visit prediction, route optimization, OCR bill scanning, smart) Tj ET
+BT /F1 10 Tf 54 310 Td (stock and target suggestions.) Tj ET
+BT /F1 10 Tf 54 296 Td (Enterprise: native apps, high-concurrency APIs, reporting warehouse,) Tj ET
+BT /F1 10 Tf 54 282 Td (ERP/Zoho/WhatsApp/payment integrations.) Tj ET
+BT /F2 14 Tf 54 260 Td (9. Immediate Testing Checklist) Tj ET
+BT /F1 10 Tf 66 240 Td (- Run latest Supabase schema SQL after each database update.) Tj ET
+BT /F1 10 Tf 66 226 Td (- Push latest GitHub commits so Vercel updates the live link.) Tj ET
+BT /F1 10 Tf 66 212 Td (- Import products and customers using Sample CSV and Import CSV.) Tj ET
+BT /F1 10 Tf 66 198 Td (- Open mobile link on field user phone and confirm product/customer data appears.) Tj ET
+BT /F1 10 Tf 66 184 Td (- Test GPS Check In, Start Outlet Check-In, Check Out Outlet with KM, Submit Visit, Book) Tj ET
+BT /F1 10 Tf 66 170 Td (  Order.) Tj ET
+BT /F1 10 Tf 66 156 Td (- Open Admin Reports and confirm outlet time, KM, visits, orders, and imported master data) Tj ET
+BT /F1 10 Tf 66 142 Td (  show correctly.) Tj ET
+BT /F2 14 Tf 54 120 Td (10. Live Links) Tj ET
+BT /F1 10 Tf 54 100 Td (Mobile App: https://fieldforce-ai.vercel.app/mobile) Tj ET
+BT /F1 10 Tf 54 86 Td (Admin Panel: https://fieldforce-ai.vercel.app/admin) Tj ET
+BT /F1 10 Tf 54 72 Td (GitHub Repository: siddharthsingl25-del/fieldforce-ai) Tj ET
+BT /F1 10 Tf 54 58 Td (Cloud Database: Supabase project connected through publishable API key for MVP testing.) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 367 >>
+stream
+BT /F2 14 Tf 54 800 Td (Important Note) Tj ET
+BT /F1 10 Tf 54 780 Td (Current build is an MVP suitable for pilot testing. Before large-scale rollout, add role-) Tj ET
+BT /F1 10 Tf 54 766 Td (based authentication, private RLS policies, user hierarchy, audit logs, secured API layer,) Tj ET
+BT /F1 10 Tf 54 752 Td (background location handling, and offline sync.) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 7 0 R >>
+endobj
+9 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R] /Count 3 >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 9 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000000154 00000 n 
+0000004445 00000 n 
+0000004581 00000 n 
+0000008896 00000 n 
+0000009032 00000 n 
+0000009450 00000 n 
+0000009586 00000 n 
+0000009655 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R >>
+startxref
+9705
+%%EOF
