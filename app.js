@@ -998,6 +998,7 @@ function renderAdminCustomers(customers) {
   document.querySelectorAll("[data-delete-customer]").forEach((button) => {
     button.addEventListener("click", () => deleteCustomer(button.dataset.deleteCustomer));
   });
+  populateAdminOptionLists();
 }
 
 function renderAdminProducts(products) {
@@ -1182,6 +1183,7 @@ function renderUsers(users = cachedUsers) {
     : cachedUsers;
 
   if (status) status.textContent = `Cloud synced: ${cachedUsers.length} users`;
+  populateAdminOptionLists();
 
   rows.innerHTML = visibleUsers.length
     ? visibleUsers
@@ -1216,8 +1218,49 @@ function renderUsers(users = cachedUsers) {
   });
 }
 
+function populateAdminOptionLists() {
+  const userOptions = document.getElementById("adminUserNameOptions");
+  const mrOptions = document.getElementById("adminMrOptions");
+  const areaOptions = document.getElementById("adminAreaOptions");
+  const customerOptions = document.getElementById("adminCustomerOptions");
+
+  if (userOptions) {
+    userOptions.innerHTML = cachedUsers
+      .filter((user) => user.full_name)
+      .map((user) => `<option value="${escapeHtml(user.full_name)}">${escapeHtml(user.role || "user")} | ${escapeHtml(user.email || "")}</option>`)
+      .join("");
+  }
+
+  if (mrOptions) {
+    mrOptions.innerHTML = cachedUsers
+      .filter((user) => user.full_name && user.role === "mr" && user.status !== "inactive")
+      .map((user) => `<option value="${escapeHtml(user.full_name)}">${escapeHtml(user.email || "")}</option>`)
+      .join("");
+  }
+
+  if (areaOptions) {
+    const areaNames = [...new Set(cachedTerritories.map((item) => item.area).filter(Boolean))].sort();
+    areaOptions.innerHTML = areaNames.map((area) => `<option value="${escapeHtml(area)}"></option>`).join("");
+  }
+
+  if (customerOptions) {
+    customerOptions.innerHTML = cachedCustomers
+      .filter((customer) => customer.name)
+      .map((customer) => `<option value="${escapeHtml(customer.name)}">${escapeHtml(customer.type || "Customer")} | ${escapeHtml(customer.area || "")}</option>`)
+      .join("");
+  }
+}
+
 async function refreshUsers() {
-  if (!canManageUsers()) return renderUsers([]);
+  if (!canManageUsers()) {
+    try {
+      cachedUsers = await cloudSelect("profiles");
+      populateAdminOptionLists();
+    } catch {
+      renderUsers([]);
+    }
+    return;
+  }
   const status = document.getElementById("userSyncStatus");
   if (status) status.textContent = "Refreshing users...";
 
@@ -1429,6 +1472,7 @@ function renderTerritories() {
     .then((items) => {
       cachedTerritories = items || [];
       populateTransferOptions(cachedTerritories);
+      populateAdminOptionLists();
       if (status) status.textContent = `Cloud synced: ${items.length} areas`;
       rows.innerHTML = items.length
         ? items.map((item) => `
@@ -1504,6 +1548,41 @@ function renderBeatPlans() {
       if (status) status.textContent = "Cloud beat plans failed to load.";
       rows.innerHTML = `<tr><td colspan="7">Cloud beat plans could not be loaded.</td></tr>`;
     });
+}
+
+async function generateAreaBeatPlan() {
+  if (!canManageMasterData()) return adminToast("Access denied");
+  const assignedTo = valueOf("beatAssignedTo");
+  const area = valueOf("beatArea");
+  const plannedDate = valueOf("beatDate") || new Date().toISOString().slice(0, 10);
+  if (!assignedTo || !area) return adminToast("Select MR and area first");
+
+  const areaCustomers = cachedCustomers
+    .filter((customer) => (customer.area || "").toLowerCase() === area.toLowerCase())
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  if (!areaCustomers.length) return adminToast("No customers found for this area");
+
+  try {
+    await Promise.all(
+      areaCustomers.map((customer, index) =>
+        cloudInsert("beat_plans", {
+          title: `${area} - ${plannedDate}`,
+          assigned_to: assignedTo,
+          area,
+          customer: customer.name,
+          planned_date: plannedDate,
+          sequence_no: index + 1,
+          status: "Planned"
+        })
+      )
+    );
+    adminToast(`${areaCustomers.length} beat stops created`);
+    setValue("beatCustomer", "");
+    setValue("beatSequence", "1");
+    renderBeatPlans();
+  } catch {
+    adminToast("Beat generation failed. Check beat plan insert policy.");
+  }
 }
 
 function renderTasks() {
@@ -2173,6 +2252,8 @@ document.getElementById("adminSaveBeat")?.addEventListener("click", async () => 
     adminToast("Beat plan save failed. Run latest SQL.");
   }
 });
+
+document.getElementById("adminGenerateAreaBeat")?.addEventListener("click", generateAreaBeatPlan);
 
 document.getElementById("adminSaveTask")?.addEventListener("click", async () => {
   const title = valueOf("taskTitle");

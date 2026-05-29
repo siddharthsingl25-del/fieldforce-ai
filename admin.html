@@ -550,7 +550,7 @@
               <label>City<input id="territoryCity" placeholder="e.g. Jaipur" /></label>
               <label>Area<input id="territoryArea" placeholder="e.g. Jaipur East" /></label>
               <label>Territory<input id="territoryName" placeholder="e.g. Jaipur East-01" /></label>
-              <label>Assigned Manager<input id="territoryManager" placeholder="ASM / RM name" /></label>
+              <label>Assigned Manager<input id="territoryManager" list="adminUserNameOptions" placeholder="ASM / RM name" /></label>
             </div>
             <button class="primary-action admin-save" id="adminSaveTerritory">Save Area</button>
           </section>
@@ -609,13 +609,16 @@
             </div>
             <div class="builder-stack compact-form">
               <label>Title<input id="beatTitle" placeholder="e.g. Jaipur East Morning Beat" /></label>
-              <label>Assigned To<input id="beatAssignedTo" placeholder="MR name" /></label>
-              <label>Area<input id="beatArea" placeholder="Area / beat" /></label>
-              <label>Customer<input id="beatCustomer" placeholder="Customer name" /></label>
+              <label>Assigned To<input id="beatAssignedTo" list="adminMrOptions" placeholder="MR name" /></label>
+              <label>Area<input id="beatArea" list="adminAreaOptions" placeholder="Area / beat" /></label>
+              <label>Customer<input id="beatCustomer" list="adminCustomerOptions" placeholder="Customer name" /></label>
               <label>Date<input id="beatDate" type="date" /></label>
               <label>Sequence<input id="beatSequence" type="number" min="1" value="1" /></label>
             </div>
-            <button class="primary-action admin-save" id="adminSaveBeat">Save Beat Plan</button>
+            <div class="import-actions">
+              <button class="primary-action admin-save" id="adminSaveBeat">Save Beat Plan</button>
+              <button class="primary-action secondary-action" id="adminGenerateAreaBeat" type="button">Create Today's Beat From Area</button>
+            </div>
           </section>
           <div class="table-panel">
             <table>
@@ -634,6 +637,11 @@
             </table>
           </div>
         </section>
+
+        <datalist id="adminUserNameOptions"></datalist>
+        <datalist id="adminMrOptions"></datalist>
+        <datalist id="adminAreaOptions"></datalist>
+        <datalist id="adminCustomerOptions"></datalist>
 
         <section class="view" id="tasks">
           <div class="section-header">

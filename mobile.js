@@ -335,9 +335,16 @@ function renderOutletStats() {
 function renderCustomers() {
   const customerList = document.getElementById("customerList");
   const query = document.getElementById("mobileCustomerSearch")?.value?.toLowerCase() || "";
-  const customers = query
-    ? state.customers.filter((customer) => [customer.name, customer.type, customer.area, customer.customerClass, customer.customer_class, customer.specialty, customer.mobile].join(" ").toLowerCase().includes(query))
+  const assignedNames = new Set((state.beatPlans || []).map((plan) => plan.customer).filter(Boolean));
+  const baseCustomers = assignedNames.size
+    ? [
+        ...state.customers.filter((customer) => assignedNames.has(customer.name)),
+        ...state.customers.filter((customer) => !assignedNames.has(customer.name))
+      ]
     : state.customers;
+  const customers = query
+    ? baseCustomers.filter((customer) => [customer.name, customer.type, customer.area, customer.customerClass, customer.customer_class, customer.specialty, customer.mobile].join(" ").toLowerCase().includes(query))
+    : baseCustomers;
   document.getElementById("customerCount").textContent = `${state.customers.length} saved`;
 
   customerList.innerHTML = customers.length
@@ -348,7 +355,7 @@ function renderCustomers() {
           return `
             <div class="master-item">
               <strong>${customer.name}</strong>
-              <span>${customer.type} | ${customer.customerClass || customer.customer_class || "-"} | ${customer.area || "No area"}</span>
+              <span>${assignedNames.has(customer.name) ? "Today's beat | " : ""}${customer.type} | ${customer.customerClass || customer.customer_class || "-"} | ${customer.area || "No area"}</span>
               <span>${customer.specialty || "No specialty"} | Mobile: ${customer.mobile || "-"}</span>
               <span>Outstanding: ${money(customer.outstanding)}</span>
             </div>
@@ -389,8 +396,12 @@ function renderProducts() {
 }
 
 function renderCustomerDropdowns() {
-  const options = state.customers.length
-    ? state.customers.map((customer) => `<option value="${customer.name}">${customer.name} - ${customer.type || "Customer"}</option>`).join("")
+  const assignedNames = new Set((state.beatPlans || []).map((plan) => plan.customer).filter(Boolean));
+  const customers = assignedNames.size
+    ? state.customers.filter((customer) => assignedNames.has(customer.name))
+    : state.customers;
+  const options = customers.length
+    ? customers.map((customer) => `<option value="${customer.name}">${customer.name} - ${customer.type || "Customer"}</option>`).join("")
     : `<option value="Shiv Medicos">Shiv Medicos - Demo Retailer</option>`;
 
   const visitSelect = document.getElementById("visitCustomerSelect");
@@ -651,9 +662,16 @@ async function syncFromCloud() {
       notes: session.notes
     }));
 
+    const currentUser = (state.name || "").toLowerCase();
     state.promotions = promotions || [];
     state.announcements = announcements || [];
-    state.beatPlans = beatPlans || [];
+    state.beatPlans = (beatPlans || []).filter((plan) => !plan.assigned_to || (plan.assigned_to || "").toLowerCase() === currentUser);
+    const assignedAreas = new Set(state.beatPlans.map((plan) => plan.area).filter(Boolean));
+    const assignedCustomers = new Set(state.beatPlans.map((plan) => plan.customer).filter(Boolean));
+    if (state.beatPlans.length) {
+      state.customers = state.customers.filter((customer) => assignedCustomers.has(customer.name) || assignedAreas.has(customer.area));
+    }
+    const assignedTasks = (tasks || []).filter((task) => !task.assigned_to || (task.assigned_to || "").toLowerCase() === currentUser);
     saveState();
     renderHistory();
     renderFollowUps();
@@ -662,8 +680,8 @@ async function syncFromCloud() {
     renderProducts();
     renderCustomerDropdowns();
     renderOrderProducts();
-    renderBeatPlans(beatPlans || []);
-    renderTasks(tasks || []);
+    renderBeatPlans(state.beatPlans);
+    renderTasks(assignedTasks);
     renderSchemes(schemes || []);
     renderPromotions(state.promotions);
     renderAnnouncements(state.announcements);
