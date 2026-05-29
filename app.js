@@ -102,6 +102,15 @@ let adminProfile = null;
 let editingCustomerId = null;
 let editingProductId = null;
 let editingUserId = null;
+let selectedReportId = "15875";
+let reportDataCache = {
+  attendance: [],
+  visits: [],
+  orders: [],
+  customers: [],
+  products: [],
+  outletSessions: []
+};
 
 const reportCatalog = [
   ["5324", "User Performance Dashboard", "Attendance, calls, productivity, outlet time, and KM by user"],
@@ -1219,12 +1228,64 @@ function renderReportDirectory() {
   const reports = reportCatalog.filter(([id, title, detail]) => !query || [id, title, detail].join(" ").toLowerCase().includes(query));
   target.innerHTML = reports.length
     ? reports.map(([id, title, detail]) => `
-      <div class="report-item" data-report-id="${id}">
+      <button class="report-item ${id === selectedReportId ? "active" : ""}" data-report-id="${id}" type="button">
         <strong>${id}. ${title}</strong>
         <span>${detail}</span>
-      </div>
+      </button>
     `).join("")
     : `<div class="report-item"><strong>No report found</strong><span>Try performance, outlet, target, tracking, product, or scheme.</span></div>`;
+
+  document.querySelectorAll("[data-report-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedReportId = button.dataset.reportId;
+      renderReportDirectory();
+      renderSelectedReport();
+    });
+  });
+  renderSelectedReport();
+}
+
+function renderSelectedReport() {
+  const title = document.getElementById("selectedReportTitle");
+  const detail = document.getElementById("selectedReportDetail");
+  const body = document.getElementById("selectedReportBody");
+  if (!title || !detail || !body) return;
+
+  const selected = reportCatalog.find(([id]) => id === selectedReportId) || reportCatalog[0];
+  const [id, reportTitle, reportDetail] = selected;
+  const { attendance, visits, orders, customers, products, outletSessions } = reportDataCache;
+  title.textContent = `${id}. ${reportTitle}`;
+  detail.textContent = reportDetail;
+
+  const rows = {
+    "5324": [...attendance, ...visits, ...orders, ...outletSessions].map((item) => ({
+      title: item.user_name || item.customer || "User",
+      text: `${item.status || item.outcome || "Activity"} | ${item.attendance_time || item.visit_time || item.order_time || item.check_out_time || "-"}`
+    })),
+    "13071": [
+      { title: "Sales Value", text: money(orders.reduce((sum, order) => sum + Number(order.total || 0), 0)) },
+      { title: "Customers", text: `${customers.length} cloud customers` },
+      { title: "Products", text: `${products.length} SKUs` }
+    ],
+    "15875": visits.map((visit) => ({ title: visit.user_name || "MR", text: `${visit.customer || "-"} | ${visit.outcome || "-"} | ${visit.visit_time || "-"}` })),
+    "16538": [
+      { title: "Team Attendance", text: `${attendance.filter((item) => item.status === "Checked In").length} checked in` },
+      { title: "Visit Exceptions", text: `${visits.filter((item) => item.outcome !== "Productive Call").length} non-productive / closed` },
+      { title: "Outlet Coverage", text: `${outletSessions.length} outlet sessions` }
+    ],
+    "274": products.map((product) => ({ title: product.name || "Product", text: `Stock ${product.stock || 0} | MRP ${money(product.mrp)} | Sale ${money(product.sale_rate)}` })),
+    "522": orders.map((order) => ({ title: order.customer || "Outlet", text: `${money(order.total)} | ${order.user_name || "-"} | ${order.order_time || "-"}` })),
+    "1137": groupCount([...visits, ...orders], "user_name").map(([user, count]) => ({ title: user, text: `${count} activities` })),
+    "1255": customers.slice(0, 30).map((customer) => ({ title: customer.name || "Customer", text: `${customer.type || "-"} | ${customer.area || "-"} | ${customer.created_at ? new Date(customer.created_at).toLocaleDateString("en-IN") : "-"}` })),
+    "1642": outletSessions.map((session) => ({ title: session.user_name || "MR", text: `${session.customer || "-"} | ${session.duration_minutes || 0} min | ${Number(session.km_travelled || 0).toFixed(1)} km` })),
+    "1895": outletSessions.map((session) => ({ title: session.user_name || "MR", text: `First ${session.check_in_time || "-"} | Last ${session.check_out_time || "-"} | ${session.duration_minutes || 0} min` })),
+    "2101": products.map((product) => ({ title: product.name || "Product", text: `${product.category || "-"} | Stock ${product.stock || 0} | Scheme ${product.scheme || "-"}` })),
+    "2202": products.filter((product) => product.scheme).map((product) => ({ title: product.scheme, text: `${product.name || "-"} | ${product.category || "-"}` }))
+  }[id] || [];
+
+  body.innerHTML = rows.length
+    ? rows.slice(0, 40).map((row) => `<div class="master-item"><strong>${row.title}</strong><span>${row.text}</span></div>`).join("")
+    : `<div class="master-item"><strong>No data yet</strong><span>This report will populate after field activity is saved.</span></div>`;
 }
 
 function renderDiscountRows() {
@@ -1311,6 +1372,7 @@ function renderReports() {
     optionalCloudSelect("outlet_sessions")
   ])
     .then(([attendance, visits, orders, customers, products, outletSessions]) => {
+      reportDataCache = { attendance, visits, orders, customers, products, outletSessions };
       const sales = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
       const outletMinutes = outletSessions.reduce((sum, session) => sum + Number(session.duration_minutes || 0), 0);
       const outletKm = outletSessions.reduce((sum, session) => sum + Number(session.km_travelled || 0), 0);
@@ -1342,6 +1404,7 @@ function renderReports() {
               .join("")
           : `<tr><td colspan="7"><strong>No outlet check-outs yet.</strong> Field user should Start Outlet Check-In and Check Out Outlet from mobile.</td></tr>`;
       }
+      renderSelectedReport();
       if (status) status.textContent = `Cloud synced: ${customers.length} customers, ${products.length} products, ${outletSessions.length} outlet sessions`;
     })
     .catch(() => {
