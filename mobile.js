@@ -25,6 +25,7 @@ const defaultState = {
   customers: [],
   products: [],
   outletSessions: [],
+  beatPlans: [],
   promotions: [],
   announcements: []
 };
@@ -53,6 +54,7 @@ let orderSearch = "";
 let orderCartItems = [];
 let activeOutletSession = null;
 let outletTimer = null;
+let selectedVisitPhotos = [];
 
 function cloudHeaders(extra = {}) {
   return {
@@ -118,6 +120,41 @@ async function cloudInsert(table, payload) {
 
   if (!response.ok) throw new Error(`Cloud insert failed: ${table}`);
   return response.json();
+}
+
+async function cloudUpdate(table, id, payload) {
+  if (!cloudEnabled) return null;
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${table}?id=eq.${id}`, {
+    method: "PATCH",
+    headers: cloudHeaders({ Prefer: "return=representation" }),
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) throw new Error(`Cloud update failed: ${table}`);
+  return response.json();
+}
+
+async function uploadVisitPhoto(file, visitId, index) {
+  const extension = file.name.includes(".") ? file.name.split(".").pop().toLowerCase() : "jpg";
+  const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `${authSession.user.id}/${visitId}/${Date.now()}-${index}.${safeExtension}`;
+  const response = await fetch(`${supabaseUrl}/storage/v1/object/visit-photos/${path}`, {
+    method: "POST",
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${authSession?.access_token || supabaseKey}`,
+      "Content-Type": file.type || "image/jpeg",
+      "x-upsert": "true"
+    },
+    body: file
+  });
+
+  if (!response.ok) throw new Error("Photo upload failed");
+  return {
+    storage_path: path,
+    photo_url: `${supabaseUrl}/storage/v1/object/authenticated/visit-photos/${path}`
+  };
 }
 
 function money(value) {
@@ -204,6 +241,54 @@ function renderHistory() {
   document.getElementById("historyList").innerHTML = history.length
     ? history.map((item) => `<div class="history-item"><strong>${item.title}</strong><span>${item.text}</span></div>`).join("")
     : `<div class="history-item"><strong>No activity saved yet</strong><span>Submit a visit or book an order.</span></div>`;
+}
+
+function renderFollowUps() {
+  const list = document.getElementById("mobileFollowUpList");
+  const count = document.getElementById("followUpCount");
+  if (!list || !count) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const dueItems = (state.visits || [])
+    .filter((visit) => visit.followUpDate && visit.followUpDate <= today)
+    .slice()
+    .reverse();
+
+  count.textContent = `${dueItems.length} due`;
+  list.innerHTML = dueItems.length
+    ? dueItems
+        .map((visit) => `<div class="master-item"><strong>${visit.customer}</strong><span>${visit.followUpDate} | ${visit.notes || visit.outcome}</span></div>`)
+        .join("")
+    : `<div class="master-item"><strong>No follow-ups due</strong><span>Pending follow-up visits will appear here.</span></div>`;
+}
+
+function renderVisitPhotoPreview() {
+  const preview = document.getElementById("visitPhotoPreview");
+  const status = document.getElementById("visitPhotoStatus");
+  if (!preview || !status) return;
+
+  preview.innerHTML = selectedVisitPhotos.map((file) => `<img src="${URL.createObjectURL(file)}" alt="Visit photo preview" />`).join("");
+  status.textContent = selectedVisitPhotos.length ? `${selectedVisitPhotos.length} photo(s) attached` : "No photos attached";
+}
+
+function todayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function markPlannedVisitDone(customerName) {
+  const plan = (state.beatPlans || []).find((item) => {
+    return item.customer === customerName && (item.planned_date || todayDate()) === todayDate() && item.status !== "Visited";
+  });
+  if (!plan?.id) return;
+
+  await cloudUpdate("beat_plans", plan.id, {
+    status: "Visited",
+    notes: `Visited by ${state.name} at ${currentTime()}`
+  });
+
+  state.beatPlans = state.beatPlans.map((item) => (item.id === plan.id ? { ...item, status: "Visited" } : item));
+  saveState();
+  renderBeatPlans(state.beatPlans);
 }
 
 function renderOutletStats() {
@@ -347,6 +432,7 @@ function renderBeatPlans(plans = []) {
   const summary = document.getElementById("beatSummary");
   if (!list || !count) return;
 
+  state.beatPlans = plans || [];
   count.textContent = `${plans.length} cloud`;
   summary.textContent = plans.length
     ? `${plans.length} planned stops | ${new Set(plans.map((plan) => plan.area).filter(Boolean)).size} areas`
@@ -357,7 +443,8 @@ function renderBeatPlans(plans = []) {
         .slice()
         .reverse()
         .map((plan, index) => {
-          return `<div class="route-stop ${index === 0 ? "active" : ""}"><strong>${plan.sequence_no || index + 1}</strong><span>${plan.customer || plan.title} | ${plan.area || "No area"}</span></div>`;
+          const statusClass = plan.status === "Visited" || plan.status === "Done" ? "done" : index === 0 ? "active" : "";
+          return `<div class="route-stop ${statusClass}"><strong>${plan.sequence_no || index + 1}</strong><span>${plan.customer || plan.title} | ${plan.area || "No area"} | ${plan.status || "Planned"}</span></div>`;
         })
         .join("")}`
     : `<div class="master-item"><strong>No cloud beat plan yet</strong><span>Admin can add beat plans in Supabase for testing.</span></div>`;
@@ -524,7 +611,9 @@ async function syncFromCloud() {
       customer: visit.customer,
       outcome: visit.outcome,
       notes: visit.notes,
-      time: visit.visit_time || new Date(visit.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+      time: visit.visit_time || new Date(visit.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      followUpDate: visit.follow_up_date,
+      photoUrls: visit.photo_urls || []
     }));
     state.orders = orders.map((order) => ({
       customer: order.customer,
@@ -544,8 +633,10 @@ async function syncFromCloud() {
 
     state.promotions = promotions || [];
     state.announcements = announcements || [];
+    state.beatPlans = beatPlans || [];
     saveState();
     renderHistory();
+    renderFollowUps();
     renderOutletStats();
     renderCustomers();
     renderProducts();
@@ -719,27 +810,69 @@ document.getElementById("checkoutOutletButton")?.addEventListener("click", async
 });
 
 document.getElementById("submitVisitButton").addEventListener("click", async () => {
+  const followUpDate = document.getElementById("visitFollowUpDate")?.value || null;
   const visit = {
     customer: document.getElementById("visitCustomerSelect")?.value || "Shiv Medicos",
     outcome: document.getElementById("visitOutcome").value,
     notes: document.getElementById("visitNotes").value.trim(),
-    time: currentTime()
+    time: currentTime(),
+    followUpDate,
+    photoUrls: []
   };
 
   state.visits.push(visit);
   saveState();
   renderHistory();
+  renderFollowUps();
 
   try {
-    await cloudInsert("visits", {
+    const savedVisits = await cloudInsert("visits", {
       customer: visit.customer,
       outcome: visit.outcome,
       notes: visit.notes,
       user_name: state.name,
       role: state.role,
-      visit_time: visit.time
+      visit_time: visit.time,
+      follow_up_date: visit.followUpDate
     });
-    toast("Visit saved to cloud");
+    const savedVisit = savedVisits?.[0];
+    const uploadedPhotos = [];
+
+    if (savedVisit?.id && selectedVisitPhotos.length) {
+      const status = document.getElementById("visitPhotoStatus");
+      if (status) status.textContent = "Uploading photos...";
+
+      for (const [index, file] of selectedVisitPhotos.entries()) {
+        const uploaded = await uploadVisitPhoto(file, savedVisit.id, index + 1);
+        uploadedPhotos.push(uploaded);
+        await cloudInsert("visit_photos", {
+          visit_id: savedVisit.id,
+          storage_path: uploaded.storage_path,
+          photo_url: uploaded.photo_url,
+          uploaded_by: state.name
+        });
+      }
+
+      await cloudUpdate(
+        "visits",
+        savedVisit.id,
+        {
+          photo_urls: uploadedPhotos.map((photo) => photo.photo_url)
+        }
+      );
+      visit.photoUrls = uploadedPhotos.map((photo) => photo.photo_url);
+      if (status) status.textContent = `${uploadedPhotos.length} photo(s) uploaded`;
+    }
+
+    await markPlannedVisitDone(visit.customer);
+    selectedVisitPhotos = [];
+    document.getElementById("visitPhotoInput").value = "";
+    document.getElementById("visitFollowUpDate").value = "";
+    renderVisitPhotoPreview();
+    saveState();
+    renderHistory();
+    renderFollowUps();
+    toast(uploadedPhotos.length ? "Visit and photos saved to cloud" : "Visit saved to cloud");
   } catch {
     toast("Visit saved locally");
   }
@@ -860,6 +993,10 @@ document.getElementById("saveCustomerButton").addEventListener("click", async ()
 document.getElementById("mobileCustomerSearch")?.addEventListener("input", renderCustomers);
 document.getElementById("mobileProductSearch")?.addEventListener("input", renderProducts);
 document.getElementById("visitCustomerSelect")?.addEventListener("change", updateSelectedVisitCustomer);
+document.getElementById("visitPhotoInput")?.addEventListener("change", (event) => {
+  selectedVisitPhotos = Array.from(event.target.files || []);
+  renderVisitPhotoPreview();
+});
 document.getElementById("orderProductSearch")?.addEventListener("input", (event) => {
   orderSearch = event.target.value;
   renderOrderProducts();
@@ -868,6 +1005,7 @@ document.getElementById("orderProductSearch")?.addEventListener("input", (event)
 renderUser();
 renderCheckIn();
 renderHistory();
+renderFollowUps();
 renderOutletStats();
 renderCustomers();
 renderProducts();

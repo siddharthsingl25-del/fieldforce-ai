@@ -34,6 +34,17 @@ create table if not exists public.visits (
   user_name text,
   role text,
   visit_time text,
+  follow_up_date date,
+  photo_urls jsonb default '[]'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.visit_photos (
+  id uuid primary key default gen_random_uuid(),
+  visit_id uuid references public.visits(id) on delete cascade,
+  storage_path text not null,
+  photo_url text not null,
+  uploaded_by text,
   created_at timestamptz not null default now()
 );
 
@@ -213,10 +224,13 @@ alter table public.outlet_sessions add column if not exists check_in_latitude nu
 alter table public.outlet_sessions add column if not exists check_in_longitude numeric;
 alter table public.outlet_sessions add column if not exists check_out_latitude numeric;
 alter table public.outlet_sessions add column if not exists check_out_longitude numeric;
+alter table public.visits add column if not exists follow_up_date date;
+alter table public.visits add column if not exists photo_urls jsonb default '[]'::jsonb;
 
 alter table public.customers enable row level security;
 alter table public.products enable row level security;
 alter table public.visits enable row level security;
+alter table public.visit_photos enable row level security;
 alter table public.outlet_sessions enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
@@ -387,6 +401,34 @@ drop policy if exists "authenticated update visits" on public.visits;
 create policy "authenticated read visits" on public.visits for select to authenticated using (true);
 create policy "authenticated insert visits" on public.visits for insert to authenticated with check (true);
 create policy "authenticated update visits" on public.visits for update to authenticated using (true) with check (true);
+
+drop policy if exists "authenticated read visit photos" on public.visit_photos;
+drop policy if exists "authenticated insert visit photos" on public.visit_photos;
+drop policy if exists "authenticated update visit photos" on public.visit_photos;
+create policy "authenticated read visit photos" on public.visit_photos for select to authenticated using (true);
+create policy "authenticated insert visit photos" on public.visit_photos for insert to authenticated with check (true);
+create policy "authenticated update visit photos" on public.visit_photos for update to authenticated using (true) with check (true);
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('visit-photos', 'visit-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+set public = false,
+    file_size_limit = 10485760,
+    allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+
+drop policy if exists "authenticated read visit photos storage" on storage.objects;
+drop policy if exists "authenticated upload visit photos storage" on storage.objects;
+drop policy if exists "authenticated update visit photos storage" on storage.objects;
+create policy "authenticated read visit photos storage"
+on storage.objects for select to authenticated
+using (bucket_id = 'visit-photos');
+create policy "authenticated upload visit photos storage"
+on storage.objects for insert to authenticated
+with check (bucket_id = 'visit-photos');
+create policy "authenticated update visit photos storage"
+on storage.objects for update to authenticated
+using (bucket_id = 'visit-photos')
+with check (bucket_id = 'visit-photos');
 
 drop policy if exists "authenticated read outlet sessions" on public.outlet_sessions;
 drop policy if exists "authenticated insert outlet sessions" on public.outlet_sessions;

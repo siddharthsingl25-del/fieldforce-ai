@@ -385,6 +385,26 @@ textarea {
   color: white;
 }
 
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.photo-preview-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  object-fit: cover;
+}
+
+#visitPhotoStatus {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
 .sku-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 74px 68px;

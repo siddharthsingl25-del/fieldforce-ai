@@ -76,6 +76,14 @@
 
         <section class="mobile-panel">
           <div class="panel-title">
+            <h2>Follow-ups due today / overdue</h2>
+            <span id="followUpCount">0 due</span>
+          </div>
+          <div class="master-list" id="mobileFollowUpList"></div>
+        </section>
+
+        <section class="mobile-panel">
+          <div class="panel-title">
             <h2>Master Data</h2>
             <span>Setup</span>
           </div>
@@ -160,6 +168,16 @@
             Notes
             <textarea id="visitNotes" placeholder="Add visit notes...">Discussed VitaPlus combo scheme and refill requirement.</textarea>
           </label>
+          <label>
+            Follow-up date
+            <input id="visitFollowUpDate" type="date" />
+          </label>
+          <label>
+            Visit Photos
+            <input id="visitPhotoInput" type="file" accept="image/*" multiple />
+          </label>
+          <div class="photo-preview-grid" id="visitPhotoPreview"></div>
+          <p id="visitPhotoStatus">No photos attached</p>
           <button class="submit-button" id="submitVisitButton">Submit Visit</button>
         </section>
 
