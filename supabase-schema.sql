@@ -45,6 +45,10 @@ create table if not exists public.outlet_sessions (
   area text,
   check_in_time text,
   check_out_time text,
+  check_in_latitude numeric,
+  check_in_longitude numeric,
+  check_out_latitude numeric,
+  check_out_longitude numeric,
   duration_minutes integer default 0,
   km_travelled numeric default 0,
   outcome text default 'Productive Call',
@@ -186,6 +190,11 @@ create table if not exists public.collections (
   status text default 'Collected',
   created_at timestamptz not null default now()
 );
+
+alter table public.outlet_sessions add column if not exists check_in_latitude numeric;
+alter table public.outlet_sessions add column if not exists check_in_longitude numeric;
+alter table public.outlet_sessions add column if not exists check_out_latitude numeric;
+alter table public.outlet_sessions add column if not exists check_out_longitude numeric;
 
 alter table public.customers enable row level security;
 alter table public.products enable row level security;

@@ -95,6 +95,30 @@ function currentTime() {
   return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatLocation(location) {
+  return `${Number(location.latitude).toFixed(5)}, ${Number(location.longitude).toFixed(5)}`;
+}
+
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Location permission is required to check in"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      () => reject(new Error("Location permission is required to check in")),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  });
+}
+
 function minutesBetween(start, end = new Date()) {
   return Math.max(0, Math.round((end.getTime() - new Date(start).getTime()) / 60000));
 }
@@ -466,25 +490,45 @@ document.getElementById("loginButton").addEventListener("click", () => {
   toast("Login saved");
 });
 
-document.getElementById("checkButton").addEventListener("click", () => {
+document.getElementById("checkButton").addEventListener("click", async () => {
+  let location;
+  try {
+    location = await getCurrentLocation();
+  } catch {
+    toast("Location permission is required to check in");
+    return;
+  }
+
   state.checkedIn = !state.checkedIn;
   saveState();
   renderCheckIn();
   const status = state.checkedIn ? "Checked In" : "Checked Out";
+  const locationStatus = document.getElementById("attendanceLocationStatus");
+  if (locationStatus) locationStatus.textContent = `location captured ✓ ${formatLocation(location)}`;
 
   cloudInsert("attendance", {
     user_name: state.name,
     role: state.role,
     status,
-    attendance_time: currentTime()
+    attendance_time: currentTime(),
+    latitude: location.latitude,
+    longitude: location.longitude
   })
     .then(() => toast(`${status} saved to cloud`))
     .catch(() => toast(state.checkedIn ? "Attendance checked in" : "Checked out"));
 });
 
-document.getElementById("startOutletButton")?.addEventListener("click", () => {
+document.getElementById("startOutletButton")?.addEventListener("click", async () => {
   if (!state.checkedIn) {
     toast("Pehle GPS attendance check-in karo");
+    return;
+  }
+
+  let location;
+  try {
+    location = await getCurrentLocation();
+  } catch {
+    toast("Location permission is required to check in");
     return;
   }
 
@@ -494,18 +538,30 @@ document.getElementById("startOutletButton")?.addEventListener("click", () => {
     customer: customerName,
     area: customer?.area || "",
     startedAt: new Date().toISOString(),
-    checkInTime: currentTime()
+    checkInTime: currentTime(),
+    checkInLatitude: location.latitude,
+    checkInLongitude: location.longitude
   };
 
   if (outletTimer) clearInterval(outletTimer);
   outletTimer = setInterval(renderOutletStats, 30000);
   renderOutletStats();
+  const outletLocationStatus = document.getElementById("outletLocationStatus");
+  if (outletLocationStatus) outletLocationStatus.textContent = `check-in location captured ✓ ${formatLocation(location)}`;
   toast("Outlet check-in started");
 });
 
 document.getElementById("checkoutOutletButton")?.addEventListener("click", async () => {
   if (!activeOutletSession) {
     toast("Pehle outlet check-in start karo");
+    return;
+  }
+
+  let location;
+  try {
+    location = await getCurrentLocation();
+  } catch {
+    toast("Location permission is required to check in");
     return;
   }
 
@@ -516,6 +572,10 @@ document.getElementById("checkoutOutletButton")?.addEventListener("click", async
     area: activeOutletSession.area,
     checkInTime: activeOutletSession.checkInTime,
     checkOutTime: currentTime(),
+    checkInLatitude: activeOutletSession.checkInLatitude,
+    checkInLongitude: activeOutletSession.checkInLongitude,
+    checkOutLatitude: location.latitude,
+    checkOutLongitude: location.longitude,
     durationMinutes,
     kmTravelled,
     outcome: document.getElementById("visitOutcome").value,
@@ -528,6 +588,8 @@ document.getElementById("checkoutOutletButton")?.addEventListener("click", async
   saveState();
   renderOutletStats();
   renderHistory();
+  const outletLocationStatus = document.getElementById("outletLocationStatus");
+  if (outletLocationStatus) outletLocationStatus.textContent = `check-out location captured ✓ ${formatLocation(location)}`;
 
   try {
     await cloudInsert("outlet_sessions", {
@@ -537,6 +599,10 @@ document.getElementById("checkoutOutletButton")?.addEventListener("click", async
       area: session.area,
       check_in_time: session.checkInTime,
       check_out_time: session.checkOutTime,
+      check_in_latitude: session.checkInLatitude,
+      check_in_longitude: session.checkInLongitude,
+      check_out_latitude: session.checkOutLatitude,
+      check_out_longitude: session.checkOutLongitude,
       duration_minutes: session.durationMinutes,
       km_travelled: session.kmTravelled,
       outcome: session.outcome,
