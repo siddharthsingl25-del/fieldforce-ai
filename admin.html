@@ -34,6 +34,7 @@
         <nav class="nav-list">
           <button class="nav-item active" data-view="command">Command</button>
           <button class="nav-item" data-view="field">Field App</button>
+          <button class="nav-item" data-view="users">User Management</button>
           <button class="nav-item" data-view="customers">Customers</button>
           <button class="nav-item" data-view="products">Products</button>
           <button class="nav-item" data-view="territories">Areas</button>
@@ -231,6 +232,55 @@
                 </tr>
               </thead>
               <tbody id="visitRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="users">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Access control</p>
+              <h2>User Management</h2>
+              <p id="userSyncStatus">Only admin users can add, edit, activate, or deactivate accounts.</p>
+            </div>
+            <button class="primary-action" id="refreshUsersButton">Refresh Users</button>
+          </div>
+          <section class="panel" id="userAdminPanel">
+            <div class="panel-heading">
+              <div>
+                <h2>Add User</h2>
+                <p>Create SPC Healthcare admin, manager, or MR login accounts securely.</p>
+              </div>
+            </div>
+            <div class="builder-stack compact-form">
+              <label>Full Name<input id="adminUserFullName" placeholder="e.g. Arjun Pal" /></label>
+              <label>Email<input id="adminUserEmail" type="email" placeholder="user@spchealthcare.com" /></label>
+              <label>Password<input id="adminUserPassword" type="password" placeholder="Temporary password" /></label>
+              <label>Role<select id="adminUserRole"><option value="mr">MR</option><option value="manager">Manager</option><option value="admin">Admin</option></select></label>
+            </div>
+            <button class="primary-action admin-save" id="adminSaveUser">Add User</button>
+          </section>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Search Users</h2>
+                <p>Search by name, email, role, or status.</p>
+              </div>
+            </div>
+            <input id="adminUserSearch" placeholder="Search users..." />
+          </section>
+          <div class="table-panel">
+            <table>
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUserRows"></tbody>
             </table>
           </div>
         </section>

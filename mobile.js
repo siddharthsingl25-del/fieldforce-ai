@@ -579,6 +579,7 @@ document.getElementById("loginButton").addEventListener("click", async () => {
     authSession = await signInWithPassword(email, password);
     saveAuthSession(authSession);
     const profile = await loadProfile(authSession.user.id);
+    if (profile.status === "inactive") throw new Error("Inactive account");
     state.loggedIn = true;
     state.name = profile.full_name;
     state.role = profile.role;
@@ -586,10 +587,10 @@ document.getElementById("loginButton").addEventListener("click", async () => {
     renderUser();
     await syncFromCloud();
     toast("Login successful");
-  } catch {
+  } catch (error) {
     authSession = null;
     localStorage.removeItem(authStorageKey);
-    if (status) status.textContent = "Login failed. Check email/password or profile.";
+    if (status) status.textContent = error.message === "Inactive account" ? "Account inactive. Contact admin." : "Login failed. Check email/password or profile.";
   }
 });
 
@@ -878,9 +879,27 @@ renderSchemes();
 renderPromotions();
 renderAnnouncements();
 renderOrderTotal();
-if (authSession && state.loggedIn) {
-  syncFromCloud();
+async function initializeExistingMobileSession() {
+  if (!authSession || !state.loggedIn) return;
+
+  try {
+    const profile = await loadProfile(authSession.user.id);
+    if (profile.status === "inactive") throw new Error("Inactive account");
+    state.name = profile.full_name;
+    state.role = profile.role;
+    saveState();
+    renderUser();
+    await syncFromCloud();
+  } catch {
+    authSession = null;
+    state.loggedIn = false;
+    saveState();
+    localStorage.removeItem(authStorageKey);
+    renderUser();
+  }
 }
+
+initializeExistingMobileSession();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

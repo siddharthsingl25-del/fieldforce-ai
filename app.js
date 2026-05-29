@@ -1,6 +1,7 @@
 const viewTitles = {
   command: "Manager Command Center",
   field: "Mobile Field App",
+  users: "User Management",
   customers: "Customer Master",
   products: "Product Master",
   territories: "Area Master",
@@ -21,6 +22,7 @@ const viewTitles = {
 
 const contextActions = {
   command: { label: "Refresh Dashboard", action: renderCommandCenter },
+  users: { label: "Add User", target: "adminUserFullName" },
   customers: { label: "Create Customer", target: "adminCustomerName" },
   products: { label: "Create Product", target: "adminProductName" },
   territories: { label: "Create Area", target: "territoryState" },
@@ -93,11 +95,13 @@ const products = [
 let cachedCustomers = [];
 let cachedProducts = [];
 let cachedTerritories = [];
+let cachedUsers = [];
 let discountAssignments = [];
 let adminAuthSession = loadAdminAuthSession();
 let adminProfile = null;
 let editingCustomerId = null;
 let editingProductId = null;
+let editingUserId = null;
 
 const reportCatalog = [
   ["5324", "User Performance Dashboard", "Attendance, calls, productivity, outlet time, and KM by user"],
@@ -128,6 +132,10 @@ function switchView(viewId) {
 
   if (viewId === "customers" || viewId === "products") {
     renderMasterData();
+  }
+
+  if (viewId === "users") {
+    renderUsers();
   }
 
   if (viewId === "visits") {
@@ -303,14 +311,39 @@ async function cloudDelete(table, id) {
   });
 }
 
+async function createAuthUser(payload) {
+  return requestJson(`${supabaseUrl}/functions/v1/admin-users`, {
+    method: "POST",
+    headers: cloudHeaders(),
+    body: JSON.stringify(payload)
+  });
+}
+
+async function requestAdminUsers(method = "GET", payload = null) {
+  const options = {
+    method,
+    headers: cloudHeaders()
+  };
+  if (payload) options.body = JSON.stringify(payload);
+  return requestJson(`${supabaseUrl}/functions/v1/admin-users`, options);
+}
+
 function canManageMasterData() {
   return ["admin", "manager"].includes(adminProfile?.role);
+}
+
+function canManageUsers() {
+  return adminProfile?.role === "admin";
 }
 
 async function unlockAdmin(session) {
   adminAuthSession = session;
   saveAdminAuthSession(session);
   adminProfile = await loadProfile(session.user.id);
+
+  if (adminProfile.status === "inactive") {
+    throw new Error("Inactive account");
+  }
 
   if (!["admin", "manager"].includes(adminProfile.role)) {
     throw new Error("Access denied");
@@ -806,6 +839,123 @@ async function deleteProduct(id) {
   }
 }
 
+function resetAdminUserForm() {
+  editingUserId = null;
+  ["adminUserFullName", "adminUserEmail", "adminUserPassword"].forEach((id) => setValue(id));
+  setValue("adminUserRole", "mr");
+  const emailInput = document.getElementById("adminUserEmail");
+  if (emailInput) emailInput.disabled = false;
+  const passwordInput = document.getElementById("adminUserPassword");
+  if (passwordInput) {
+    passwordInput.disabled = false;
+    passwordInput.placeholder = "Temporary password";
+  }
+  const saveButton = document.getElementById("adminSaveUser");
+  if (saveButton) saveButton.textContent = "Add User";
+}
+
+function renderUsers(users = cachedUsers) {
+  const rows = document.getElementById("adminUserRows");
+  const status = document.getElementById("userSyncStatus");
+  if (!rows) return;
+
+  if (!canManageUsers()) {
+    rows.innerHTML = `<tr><td colspan="5"><strong>Access denied.</strong> Only admin users can manage accounts.</td></tr>`;
+    if (status) status.textContent = "Access denied. Login with an admin account.";
+    return;
+  }
+
+  cachedUsers = users || [];
+  const query = valueOf("adminUserSearch").toLowerCase();
+  const visibleUsers = query
+    ? cachedUsers.filter((user) => [user.full_name, user.email, user.role, user.status].join(" ").toLowerCase().includes(query))
+    : cachedUsers;
+
+  if (status) status.textContent = `Cloud synced: ${cachedUsers.length} users`;
+
+  rows.innerHTML = visibleUsers.length
+    ? visibleUsers
+        .map((user) => {
+          const isSelf = adminProfile?.id === user.id;
+          const nextStatus = user.status === "inactive" ? "active" : "inactive";
+          const statusLabel = user.status === "inactive" ? "Inactive" : "Active";
+          return `
+            <tr>
+              <td><strong>${user.full_name || "-"}</strong></td>
+              <td>${user.email || "-"}</td>
+              <td><span class="tag">${user.role || "-"}</span></td>
+              <td><span class="tag ${user.status === "inactive" ? "danger-tag" : ""}">${statusLabel}</span></td>
+              <td>
+                <button class="table-action" data-edit-user="${user.id}">Edit</button>
+                <button class="table-action ${nextStatus === "inactive" ? "danger" : ""}" data-toggle-user="${user.id}" data-next-status="${nextStatus}" ${isSelf ? "disabled" : ""}>${nextStatus === "inactive" ? "Deactivate" : "Activate"}</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("")
+    : `<tr><td colspan="5"><strong>No users found.</strong> Add a user from the form above.</td></tr>`;
+
+  document.querySelectorAll("[data-edit-user]").forEach((button) => {
+    button.addEventListener("click", () => editUser(button.dataset.editUser));
+  });
+  document.querySelectorAll("[data-toggle-user]").forEach((button) => {
+    button.addEventListener("click", () => toggleUserStatus(button.dataset.toggleUser, button.dataset.nextStatus));
+  });
+}
+
+async function refreshUsers() {
+  if (!canManageUsers()) return renderUsers([]);
+  const status = document.getElementById("userSyncStatus");
+  if (status) status.textContent = "Refreshing users...";
+
+  try {
+    const result = await requestAdminUsers("GET");
+    renderUsers(result.users || []);
+  } catch {
+    if (status) status.textContent = "User refresh failed. Check Edge Function deployment.";
+    const userRows = document.getElementById("adminUserRows");
+    if (userRows) userRows.innerHTML = `<tr><td colspan="5"><strong>User refresh failed.</strong> Deploy the admin-users Edge Function and set the service role secret.</td></tr>`;
+  }
+}
+
+function editUser(id) {
+  if (!canManageUsers()) return adminToast("Access denied");
+  const user = cachedUsers.find((item) => String(item.id) === String(id));
+  if (!user) return adminToast("User not found");
+
+  editingUserId = id;
+  setValue("adminUserFullName", user.full_name || "");
+  setValue("adminUserEmail", user.email || "");
+  setValue("adminUserPassword", "");
+  setValue("adminUserRole", user.role || "mr");
+  const emailInput = document.getElementById("adminUserEmail");
+  if (emailInput) emailInput.disabled = true;
+  const passwordInput = document.getElementById("adminUserPassword");
+  if (passwordInput) {
+    passwordInput.disabled = true;
+    passwordInput.placeholder = "Password cannot be changed here";
+  }
+  const saveButton = document.getElementById("adminSaveUser");
+  if (saveButton) saveButton.textContent = "Update User";
+  document.getElementById("adminUserFullName")?.focus();
+  adminToast("User loaded for editing");
+}
+
+async function toggleUserStatus(id, nextStatus) {
+  if (!canManageUsers()) return adminToast("Access denied");
+  if (String(adminProfile?.id) === String(id)) return adminToast("You cannot deactivate your own account");
+  if (!confirm("Are you sure?")) return;
+
+  try {
+    await requestAdminUsers("PATCH", { id, status: nextStatus });
+    if (String(editingUserId) === String(id)) resetAdminUserForm();
+    await refreshUsers();
+    adminToast(`User ${nextStatus === "inactive" ? "deactivated" : "activated"}`);
+  } catch {
+    adminToast("User status update failed. Check Edge Function deployment.");
+  }
+}
+
 function populateProductCategoryFilter(products) {
   const select = document.getElementById("adminProductCategoryFilter");
   if (!select) return;
@@ -1232,13 +1382,16 @@ document.getElementById("adminLoginButton")?.addEventListener("click", async () 
   } catch (error) {
     adminAuthSession = null;
     localStorage.removeItem(adminAuthStorageKey);
-    if (status) status.textContent = error.message === "Access denied" ? "Access denied" : "Login failed. Check email/password or profile.";
+    if (status) status.textContent = error.message === "Access denied" ? "Access denied" : error.message === "Inactive account" ? "Account inactive. Contact admin." : "Login failed. Check email/password or profile.";
   }
 });
 
 document.querySelectorAll("[data-refresh-master]").forEach((button) => {
   button.addEventListener("click", renderMasterData);
 });
+
+document.getElementById("refreshUsersButton")?.addEventListener("click", refreshUsers);
+document.getElementById("adminUserSearch")?.addEventListener("input", () => renderUsers(cachedUsers));
 
 document.querySelectorAll("[data-refresh-ops]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -1408,6 +1561,41 @@ document.getElementById("adminSaveAnnouncement")?.addEventListener("click", asyn
   }
 });
 
+document.getElementById("adminSaveUser")?.addEventListener("click", async () => {
+  if (!canManageUsers()) return adminToast("Access denied");
+  const fullName = valueOf("adminUserFullName");
+  const email = valueOf("adminUserEmail");
+  const password = document.getElementById("adminUserPassword")?.value || "";
+  const role = valueOf("adminUserRole");
+
+  if (!fullName) return adminToast("Full name required");
+  if (!editingUserId && !email) return adminToast("Email required");
+  if (!editingUserId && password.length < 6) return adminToast("Password must be at least 6 characters");
+
+  try {
+    if (editingUserId) {
+      await requestAdminUsers("PATCH", {
+        id: editingUserId,
+        full_name: fullName,
+        role
+      });
+      adminToast("User updated");
+    } else {
+      await createAuthUser({
+        full_name: fullName,
+        email,
+        password,
+        role
+      });
+      adminToast("User created");
+    }
+    resetAdminUserForm();
+    await refreshUsers();
+  } catch {
+    adminToast("User save failed. Check Edge Function deployment.");
+  }
+});
+
 document.getElementById("adminSaveProduct")?.addEventListener("click", async () => {
   const name = valueOf("adminProductName");
   if (!name) return adminToast("Product name required");
@@ -1563,6 +1751,7 @@ function initializeAdminApp() {
   renderProducts();
   updateContextAction("command");
   renderMasterData();
+  refreshUsers();
   renderCommandCenter();
   renderCloudSales();
   renderBeatPlans();

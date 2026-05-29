@@ -282,6 +282,16 @@ button.icon-button:hover {
   filter: brightness(0.96);
 }
 
+.table-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.danger-tag {
+  background: #ffe8e4;
+  color: #a33d2d;
+}
+
 .view {
   display: none;
 }
