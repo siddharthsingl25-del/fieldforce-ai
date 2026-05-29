@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceRoleKey = getSecretKey();
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace("Bearer ", "");
 
@@ -128,4 +128,19 @@ function json(payload: unknown, status = 200) {
       "Content-Type": "application/json"
     }
   });
+}
+
+function getSecretKey() {
+  const legacyKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacyKey) return legacyKey;
+
+  const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (!secretKeys) return null;
+
+  try {
+    const parsed = JSON.parse(secretKeys);
+    return parsed.default || Object.values(parsed)[0] || null;
+  } catch {
+    return null;
+  }
 }
