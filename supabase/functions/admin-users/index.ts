@@ -94,7 +94,10 @@ Deno.serve(async (req) => {
     if (!Object.keys(update).length && !password) return json({ error: "No changes provided" }, 400);
 
     if (password) {
-      const { error: passwordError } = await adminClient.auth.admin.updateUserById(id, { password });
+      const { error: passwordError } = await adminClient.auth.admin.updateUserById(id, {
+        password,
+        email_confirm: true
+      });
       if (passwordError) return json({ error: passwordError.message }, 400);
     }
 

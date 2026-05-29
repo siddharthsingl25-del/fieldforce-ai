@@ -245,7 +245,15 @@ async function loadProfile(userId) {
 function requestJson(url, options = {}) {
   if (typeof fetch === "function") {
     return fetch(url, options).then(async (response) => {
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        const text = await response.text();
+        try {
+          const payload = JSON.parse(text);
+          throw new Error(payload.error || text);
+        } catch (error) {
+          throw new Error(error.message || text);
+        }
+      }
       return response.json();
     });
   }
@@ -1596,8 +1604,8 @@ document.getElementById("adminSaveUser")?.addEventListener("click", async () => 
     }
     resetAdminUserForm();
     await refreshUsers();
-  } catch {
-    adminToast("User save failed. Check Edge Function deployment.");
+  } catch (error) {
+    adminToast(`User save failed: ${error.message}`);
   }
 });
 
