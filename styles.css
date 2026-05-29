@@ -269,6 +269,18 @@ h2 {
   cursor: pointer;
 }
 
+.password-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.password-preview {
+  align-self: center;
+  color: var(--muted);
+  font-weight: 800;
+}
+
 button.primary-action:hover,
 button.icon-button:hover {
   filter: brightness(0.96);

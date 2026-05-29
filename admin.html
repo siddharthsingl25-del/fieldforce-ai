@@ -303,8 +303,17 @@
             <div class="builder-stack compact-form">
               <label>Full Name<input id="adminUserFullName" placeholder="e.g. Arjun Pal" /></label>
               <label>Email<input id="adminUserEmail" type="email" placeholder="user@spchealthcare.com" /></label>
-              <label>Password<input id="adminUserPassword" type="password" placeholder="Temporary password" /></label>
+              <label>Password
+                <span class="password-row">
+                  <input id="adminUserPassword" type="password" placeholder="Temporary password" />
+                  <button type="button" class="table-action" id="toggleUserPassword">Show</button>
+                </span>
+              </label>
               <label>Role<select id="adminUserRole"><option value="mr">MR</option><option value="manager">Manager</option><option value="admin">Admin</option></select></label>
+            </div>
+            <div class="import-actions">
+              <button class="primary-action secondary-action" id="generateUserPassword" type="button">Generate Password</button>
+              <span class="password-preview" id="adminPasswordPreview">Password will show here only while you set/reset it.</span>
             </div>
             <button class="primary-action admin-save" id="adminSaveUser">Add User</button>
           </section>

@@ -866,6 +866,8 @@ function resetAdminUserForm() {
   editingUserId = null;
   ["adminUserFullName", "adminUserEmail", "adminUserPassword"].forEach((id) => setValue(id));
   setValue("adminUserRole", "mr");
+  const preview = document.getElementById("adminPasswordPreview");
+  if (preview) preview.textContent = "Password will show here only while you set/reset it.";
   const emailInput = document.getElementById("adminUserEmail");
   if (emailInput) emailInput.disabled = false;
   const passwordInput = document.getElementById("adminUserPassword");
@@ -962,6 +964,23 @@ function editUser(id) {
   if (saveButton) saveButton.textContent = "Update User";
   document.getElementById("adminUserFullName")?.focus();
   adminToast("User loaded for editing");
+}
+
+function generateReadablePassword() {
+  const random = Math.random().toString(36).slice(2, 8);
+  return `SPC@${random}25`;
+}
+
+function setAdminPasswordValue(password) {
+  const input = document.getElementById("adminUserPassword");
+  const preview = document.getElementById("adminPasswordPreview");
+  if (input) {
+    input.value = password;
+    input.type = "text";
+  }
+  if (preview) preview.textContent = `Temporary password: ${password}`;
+  const toggle = document.getElementById("toggleUserPassword");
+  if (toggle) toggle.textContent = "Hide";
 }
 
 async function toggleUserStatus(id, nextStatus) {
@@ -1511,6 +1530,19 @@ document.querySelectorAll("[data-refresh-master]").forEach((button) => {
 document.getElementById("refreshUsersButton")?.addEventListener("click", refreshUsers);
 document.getElementById("adminUserSearch")?.addEventListener("input", () => renderUsers(cachedUsers));
 document.getElementById("refreshSetupFlow")?.addEventListener("click", renderSetupFlow);
+document.getElementById("generateUserPassword")?.addEventListener("click", () => setAdminPasswordValue(generateReadablePassword()));
+document.getElementById("toggleUserPassword")?.addEventListener("click", () => {
+  const input = document.getElementById("adminUserPassword");
+  const toggle = document.getElementById("toggleUserPassword");
+  if (!input || !toggle) return;
+  input.type = input.type === "password" ? "text" : "password";
+  toggle.textContent = input.type === "password" ? "Show" : "Hide";
+});
+document.getElementById("adminUserPassword")?.addEventListener("input", () => {
+  const password = document.getElementById("adminUserPassword")?.value || "";
+  const preview = document.getElementById("adminPasswordPreview");
+  if (preview) preview.textContent = password ? `Temporary password: ${password}` : "Password will show here only while you set/reset it.";
+});
 document.querySelectorAll("[data-open-setup-view]").forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.openSetupView));
 });
@@ -1706,7 +1738,7 @@ document.getElementById("adminSaveUser")?.addEventListener("click", async () => 
         payload.password = password;
       }
       await requestAdminUsers("PATCH", payload);
-      adminToast("User updated");
+      adminToast(password ? `User updated. Temporary password: ${password}` : "User updated");
     } else {
       await createAuthUser({
         full_name: fullName,
@@ -1714,7 +1746,7 @@ document.getElementById("adminSaveUser")?.addEventListener("click", async () => 
         password,
         role
       });
-      adminToast("User created");
+      adminToast(`User created. Temporary password: ${password}`);
     }
     resetAdminUserForm();
     await refreshUsers();
