@@ -7,6 +7,7 @@ const cloudEnabled = Boolean(supabaseUrl && supabaseKey);
 const mobileTitles = {
   "m-home": "Today",
   "m-beat": "Beat Plan",
+  "m-outlet-detail": "Outlet Info",
   "m-visit": "Visit",
   "m-customers": "Customers",
   "m-products": "Products",
@@ -55,6 +56,8 @@ let orderCartItems = [];
 let activeOutletSession = null;
 let outletTimer = null;
 let selectedVisitPhotos = [];
+let outletFilter = "pending";
+let selectedOutletCustomer = null;
 
 function cloudHeaders(extra = {}) {
   return {
@@ -206,7 +209,7 @@ function showMobileView(viewId) {
     button.classList.toggle("active", button.dataset.mobileView === viewId);
   });
 
-  document.getElementById("mobileTitle").textContent = mobileTitles[viewId];
+  document.getElementById("mobileTitle").textContent = mobileTitles[viewId] || "FieldForce AI";
   closeDrawer();
 }
 
@@ -457,28 +460,124 @@ function renderOrderProducts() {
   renderOrderTotal();
 }
 
-function renderBeatPlans(plans = []) {
+function getBeatOutlets() {
+  const planned = (state.beatPlans || []).map((plan, index) => {
+    const customer = state.customers.find((item) => item.name === plan.customer) || {};
+    return {
+      id: plan.id || `${plan.customer}-${index}`,
+      planId: plan.id,
+      sequence: plan.sequence_no || index + 1,
+      name: plan.customer || plan.title || "Outlet",
+      type: customer.type || "Retailer",
+      area: plan.area || customer.area || "",
+      customerClass: customer.customerClass || customer.customer_class || "-",
+      mobile: customer.mobile || "",
+      outstanding: customer.outstanding || 0,
+      lastVisited: customer.last_visited || plan.last_visited || plan.planned_date || "",
+      status: plan.status || "Planned"
+    };
+  });
+
+  if (planned.length) return planned.sort((a, b) => Number(a.sequence) - Number(b.sequence));
+
+  return (state.customers || []).map((customer, index) => ({
+    id: customer.id || customer.name || index,
+    sequence: index + 1,
+    name: customer.name,
+    type: customer.type || "Retailer",
+    area: customer.area || "",
+    customerClass: customer.customerClass || customer.customer_class || "-",
+    mobile: customer.mobile || "",
+    outstanding: customer.outstanding || 0,
+    lastVisited: customer.last_visited || "",
+    status: "Planned"
+  }));
+}
+
+function isOutletDone(outlet) {
+  return ["visited", "done", "completed"].includes(String(outlet.status || "").toLowerCase());
+}
+
+function renderBeatPlans(plans = state.beatPlans || []) {
   const list = document.getElementById("cloudBeatList");
-  const count = document.getElementById("beatPlanCount");
   const summary = document.getElementById("beatSummary");
-  if (!list || !count) return;
+  if (!list) return;
 
   state.beatPlans = plans || [];
-  count.textContent = `${plans.length} cloud`;
-  summary.textContent = plans.length
-    ? `${plans.length} planned stops | ${new Set(plans.map((plan) => plan.area).filter(Boolean)).size} areas`
-    : "Cloud beat plans will appear here after admin setup.";
+  const outlets = getBeatOutlets();
+  const pending = outlets.filter((outlet) => !isOutletDone(outlet));
+  const completed = outlets.filter(isOutletDone);
+  const visible = outletFilter === "completed" ? completed : outletFilter === "all" ? outlets : pending;
 
-  list.innerHTML = plans.length
-    ? `<div class="route-line"></div>${plans
-        .slice()
-        .reverse()
-        .map((plan, index) => {
-          const statusClass = plan.status === "Visited" || plan.status === "Done" ? "done" : index === 0 ? "active" : "";
-          return `<div class="route-stop ${statusClass}"><strong>${plan.sequence_no || index + 1}</strong><span>${plan.customer || plan.title} | ${plan.area || "No area"} | ${plan.status || "Planned"}</span></div>`;
-        })
-        .join("")}`
-    : `<div class="master-item"><strong>No cloud beat plan yet</strong><span>Admin can add beat plans in Supabase for testing.</span></div>`;
+  document.getElementById("outletDateLabel").textContent = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+  document.getElementById("outletUserLabel").textContent = state.name || "MR";
+  document.getElementById("pendingOutletCount").textContent = `(${pending.length})`;
+  document.getElementById("completedOutletCount").textContent = `(${completed.length})`;
+  document.getElementById("allOutletCount").textContent = `(${outlets.length})`;
+  if (summary) {
+    summary.textContent = outlets.length
+      ? `${pending.length} pending, ${completed.length} completed | ${new Set(outlets.map((outlet) => outlet.area).filter(Boolean)).size} areas`
+      : "Admin se beat plan create karo. Yahan MR ke outlets start honge.";
+  }
+
+  list.innerHTML = visible.length
+    ? visible
+        .map((outlet) => `
+          <article class="outlet-card">
+            <div class="outlet-card-main">
+              <div class="outlet-thumb">▦</div>
+              <div>
+                <span class="call-status">${isOutletDone(outlet) ? "Completed" : "Not Started"}</span>
+                <strong>${outlet.name}</strong>
+                <small>ID: ${outlet.sequence || "-"}</small>
+                <p>Last Visited: ${outlet.lastVisited || "-"}</p>
+              </div>
+              <span class="pin-status ${isOutletDone(outlet) ? "done" : ""}">●</span>
+              <button class="info-button" data-outlet-info="${outlet.name}" type="button">i</button>
+            </div>
+            <div class="outlet-card-actions">
+              <button data-outlet-more="${outlet.name}" type="button">More Actions</button>
+              <button data-outlet-start="${outlet.name}" type="button">Start Call</button>
+            </div>
+          </article>
+        `)
+        .join("")
+    : `<div class="master-item"><strong>No outlets here</strong><span>${outletFilter === "pending" ? "Pending beat clear hai." : "No data in this tab."}</span></div>`;
+
+  document.querySelectorAll("[data-outlet-more], [data-outlet-info]").forEach((button) => {
+    button.addEventListener("click", () => openOutletDetail(button.dataset.outletMore || button.dataset.outletInfo));
+  });
+  document.querySelectorAll("[data-outlet-start]").forEach((button) => {
+    button.addEventListener("click", () => startOutletCall(button.dataset.outletStart));
+  });
+}
+
+function selectCustomerForWork(customerName) {
+  const visitSelect = document.getElementById("visitCustomerSelect");
+  const orderSelect = document.getElementById("orderCustomerSelect");
+  if (visitSelect) visitSelect.value = customerName;
+  if (orderSelect) orderSelect.value = customerName;
+  updateSelectedVisitCustomer();
+}
+
+function openOutletDetail(customerName) {
+  const outlet = getBeatOutlets().find((item) => item.name === customerName);
+  const customer = state.customers.find((item) => item.name === customerName) || {};
+  if (!outlet && !customer.name) return toast("Outlet not found");
+
+  selectedOutletCustomer = outlet || customer;
+  selectCustomerForWork(customerName);
+  document.getElementById("outletDetailName").textContent = customerName;
+  document.getElementById("outletDetailMeta").textContent = `Owner: ${customer.owner || "-"} | ${outlet?.area || customer.area || "No area"}`;
+  document.getElementById("outletDetailType").textContent = (outlet?.type || customer.type || "Retailer").toUpperCase();
+  document.getElementById("outletDetailOutstanding").textContent = money(outlet?.outstanding || customer.outstanding || 0);
+  showMobileView("m-outlet-detail");
+}
+
+async function startOutletCall(customerName) {
+  selectCustomerForWork(customerName);
+  showMobileView("m-visit");
+  document.getElementById("startOutletButton")?.click();
 }
 
 function renderTasks(tasks = []) {
@@ -706,6 +805,27 @@ document.getElementById("mobileLogoutButton")?.addEventListener("click", logoutM
 document.querySelectorAll("[data-jump-view]").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.jumpView));
 });
+
+document.querySelectorAll("[data-outlet-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    outletFilter = button.dataset.outletFilter;
+    document.querySelectorAll("[data-outlet-filter]").forEach((item) => item.classList.toggle("active", item.dataset.outletFilter === outletFilter));
+    renderBeatPlans();
+  });
+});
+
+document.getElementById("backToOutletList")?.addEventListener("click", () => showMobileView("m-beat"));
+document.getElementById("detailStartCallButton")?.addEventListener("click", () => {
+  const name = selectedOutletCustomer?.name || document.getElementById("outletDetailName")?.textContent;
+  if (name) startOutletCall(name);
+});
+document.getElementById("orderOnPhoneButton")?.addEventListener("click", () => {
+  const name = selectedOutletCustomer?.name || document.getElementById("outletDetailName")?.textContent;
+  if (name) selectCustomerForWork(name);
+  showMobileView("m-order");
+});
+document.getElementById("outletTransactionsButton")?.addEventListener("click", () => showMobileView("m-order"));
+document.getElementById("outletSchemesButton")?.addEventListener("click", () => showMobileView("m-order"));
 
 document.getElementById("loginButton").addEventListener("click", async () => {
   const status = document.getElementById("loginStatus");

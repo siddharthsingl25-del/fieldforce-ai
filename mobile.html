@@ -123,18 +123,19 @@
       </section>
 
       <section class="mobile-view" id="m-beat">
-        <section class="mobile-panel">
-          <div class="panel-title">
-            <h2>Beat Plan</h2>
-            <span id="beatPlanCount">0 cloud</span>
+        <section class="outlet-screen">
+          <div class="outlet-date-strip">Today</div>
+          <div class="outlet-day-row">
+            <button class="circle-nav" type="button">‹</button>
+            <div><span id="outletDateLabel">29 May</span><strong id="outletUserLabel">MR</strong></div>
+            <button class="circle-nav" type="button">›</button>
           </div>
-          <div class="route-card" id="cloudBeatList">
-            <div class="route-line"></div>
-            <div class="route-stop done"><strong>1</strong><span>Dr. Mehta Clinic</span></div>
-            <div class="route-stop active"><strong>2</strong><span>Shiv Medicos</span></div>
-            <div class="route-stop"><strong>3</strong><span>City Pharma Stockist</span></div>
-            <div class="route-stop"><strong>4</strong><span>Wellness Mart</span></div>
+          <div class="outlet-tabs" id="outletTabs">
+            <button class="active" data-outlet-filter="pending" type="button">Pending <span id="pendingOutletCount">(0)</span></button>
+            <button data-outlet-filter="completed" type="button">Completed <span id="completedOutletCount">(0)</span></button>
+            <button data-outlet-filter="all" type="button">All <span id="allOutletCount">(0)</span></button>
           </div>
+          <div class="outlet-list" id="cloudBeatList"></div>
         </section>
         <section class="mobile-panel compact">
           <strong>Route Summary</strong>
@@ -147,6 +148,39 @@
           </div>
           <div class="master-list" id="mobileTaskList"></div>
         </section>
+      </section>
+
+      <section class="mobile-view" id="m-outlet-detail">
+        <section class="outlet-info-hero">
+          <button class="back-link" id="backToOutletList" type="button">‹</button>
+          <div class="outlet-icon">▦</div>
+          <div>
+            <h2 id="outletDetailName">Outlet Info</h2>
+            <p id="outletDetailMeta">Owner: -</p>
+            <span class="mini-tag">FIRM</span>
+            <span class="mini-tag" id="outletDetailType">RETAILER</span>
+          </div>
+          <button class="info-dot" type="button">i</button>
+        </section>
+        <section class="outlet-quick-actions">
+          <button type="button">◇</button>
+          <button type="button">WhatsApp</button>
+          <button type="button">Call</button>
+        </section>
+        <section class="mobile-panel soft-note">Loadout not available</section>
+        <section class="collection-card">
+          <span>Pending Collection</span>
+          <strong id="outletDetailOutstanding">₹0</strong>
+          <button type="button">Collect</button>
+        </section>
+        <section class="outlet-tile-grid">
+          <button id="outletTransactionsButton" type="button"><strong>▤</strong><span>Transactions</span></button>
+          <button id="outletSchemesButton" type="button"><strong>%</strong><span>Schemes</span></button>
+        </section>
+        <div class="outlet-bottom-actions">
+          <button class="outline-button" id="orderOnPhoneButton" type="button">Order_on_phone</button>
+          <button class="submit-button" id="detailStartCallButton" type="button">Start Call</button>
+        </div>
       </section>
 
       <section class="mobile-view" id="m-visit">
