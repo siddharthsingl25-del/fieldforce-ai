@@ -322,6 +322,11 @@ p {
   background: var(--dark);
 }
 
+.secondary-start {
+  margin-top: 12px;
+  background: #064ab1;
+}
+
 .quick-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -345,6 +350,29 @@ p {
 .quick-grid span {
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.next-outlet-card {
+  display: grid;
+  gap: 8px;
+}
+
+.next-outlet-card strong,
+.next-outlet-card span {
+  display: block;
+}
+
+.next-outlet-card strong {
+  font-size: 1.15rem;
+}
+
+.next-outlet-card span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.next-outlet-card button {
+  margin-top: 4px;
 }
 
 .mobile-panel,

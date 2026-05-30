@@ -68,30 +68,27 @@
 
       <section class="mobile-view active" id="m-home">
         <article class="hero-card">
-          <span class="pill">Thursday, 28 May</span>
+          <span class="pill" id="todayDatePill">Today</span>
           <h2 id="welcomeName">Good morning, Riya</h2>
-          <p>12 planned visits in Jaipur East. AI recommends starting near Apex Hospital.</p>
+          <p id="todayWorkSummary">Check in, open your route, and start the first outlet call.</p>
           <button class="check-button" id="checkButton">GPS Check In</button>
           <p id="attendanceLocationStatus">Location not captured yet</p>
+          <button class="submit-button secondary-start" id="startDayButton" type="button">Open Today's Outlets</button>
         </article>
 
         <div class="quick-grid">
-          <article><strong>₹1.8L</strong><span>Today target</span></article>
-          <article><strong>8</strong><span>Day streak</span></article>
-          <article><strong>72%</strong><span>Achievement</span></article>
-          <article><strong>4.9k</strong><span>Points</span></article>
+          <article><strong id="homePendingCount">0</strong><span>Pending outlets</span></article>
+          <article><strong id="homeDoneCount">0</strong><span>Completed</span></article>
+          <article><strong id="homeOrderValue">₹0</strong><span>Orders today</span></article>
+          <article><strong id="homeKmValue">0 km</strong><span>KM tracked</span></article>
         </div>
 
         <section class="mobile-panel">
           <div class="panel-title">
-            <h2>Next Best Actions</h2>
-            <span>AI</span>
+            <h2>Next Outlet</h2>
+            <span id="nextOutletStatus">Ready</span>
           </div>
-          <div class="action-list">
-            <button>Visit Dr. Mehta before 11:30 AM</button>
-            <button>Push CardioMax samples to 3 cardiologists</button>
-            <button>Collect ₹18,500 from Shiv Medicos</button>
-          </div>
+          <div class="next-outlet-card" id="nextOutletCard"></div>
         </section>
 
         <section class="mobile-panel">

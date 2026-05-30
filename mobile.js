@@ -220,6 +220,7 @@ function renderUser() {
   document.getElementById("userRoleLabel").textContent = `${state.role} | FieldForce AI`;
   document.getElementById("drawerUserName").textContent = state.name || "Field User";
   document.getElementById("drawerUserRole").textContent = `${state.role || "MR"} | SPC Healthcare`;
+  renderHomeDashboard();
 }
 
 function openDrawer() {
@@ -243,6 +244,44 @@ function renderCheckIn() {
   const button = document.getElementById("checkButton");
   button.classList.toggle("checked", state.checkedIn);
   button.textContent = state.checkedIn ? "Checked In - Tracking On" : "GPS Check In";
+  renderHomeDashboard();
+}
+
+function renderHomeDashboard() {
+  const outlets = getBeatOutlets();
+  const pending = outlets.filter((outlet) => !isOutletDone(outlet));
+  const completed = outlets.filter(isOutletDone);
+  const nextOutlet = pending[0];
+  const orderValue = (state.orders || []).reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const kmValue = (state.outletSessions || []).reduce((sum, session) => sum + Number(session.kmTravelled || session.km_travelled || 0), 0);
+
+  const datePill = document.getElementById("todayDatePill");
+  if (datePill) datePill.textContent = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "2-digit", month: "short" });
+  const summary = document.getElementById("todayWorkSummary");
+  if (summary) {
+    summary.textContent = state.checkedIn
+      ? `${pending.length} pending outlets. Start next call from your route.`
+      : "Pehle GPS Check In karo, phir today's outlets start karo.";
+  }
+
+  const pendingCount = document.getElementById("homePendingCount");
+  const doneCount = document.getElementById("homeDoneCount");
+  const orderTotal = document.getElementById("homeOrderValue");
+  const kmTotal = document.getElementById("homeKmValue");
+  if (pendingCount) pendingCount.textContent = pending.length;
+  if (doneCount) doneCount.textContent = completed.length;
+  if (orderTotal) orderTotal.textContent = money(orderValue);
+  if (kmTotal) kmTotal.textContent = `${kmValue.toFixed(1)} km`;
+
+  const status = document.getElementById("nextOutletStatus");
+  if (status) status.textContent = state.checkedIn ? "Ready" : "Check-in required";
+  const card = document.getElementById("nextOutletCard");
+  if (!card) return;
+  card.innerHTML = nextOutlet
+    ? `<strong>${nextOutlet.name}</strong><span>${nextOutlet.type || "Outlet"} | ${nextOutlet.area || "Area pending"} | ID ${nextOutlet.sequence || ""}</span><button class="submit-button" data-home-start="${nextOutlet.name}" type="button">Start Call</button>`
+    : `<strong>No pending outlets</strong><span>Create beat plan from admin or switch to All tab.</span><button class="submit-button" data-jump-view="m-beat" type="button">Open Outlets</button>`;
+  card.querySelector("[data-home-start]")?.addEventListener("click", (event) => startOutletCall(event.currentTarget.dataset.homeStart));
+  card.querySelector("[data-jump-view]")?.addEventListener("click", (event) => showMobileView(event.currentTarget.dataset.jumpView));
 }
 
 function renderHistory() {
@@ -551,6 +590,7 @@ function renderBeatPlans(plans = state.beatPlans || []) {
   document.querySelectorAll("[data-outlet-start]").forEach((button) => {
     button.addEventListener("click", () => startOutletCall(button.dataset.outletStart));
   });
+  renderHomeDashboard();
 }
 
 function selectCustomerForWork(customerName) {
@@ -859,6 +899,8 @@ document.querySelectorAll("[data-jump-view]").forEach((button) => {
   button.addEventListener("click", () => showMobileView(button.dataset.jumpView));
 });
 
+document.getElementById("startDayButton")?.addEventListener("click", () => showMobileView("m-beat"));
+
 document.querySelectorAll("[data-outlet-filter]").forEach((button) => {
   button.addEventListener("click", () => {
     outletFilter = button.dataset.outletFilter;
@@ -1015,6 +1057,7 @@ document.getElementById("checkoutOutletButton")?.addEventListener("click", async
   saveState();
   renderOutletStats();
   renderHistory();
+  renderHomeDashboard();
   const outletLocationStatus = document.getElementById("outletLocationStatus");
   if (outletLocationStatus) outletLocationStatus.textContent = `check-out location captured ✓ ${formatLocation(location)}`;
 
@@ -1056,6 +1099,7 @@ document.getElementById("submitVisitButton").addEventListener("click", async () 
   saveState();
   renderHistory();
   renderFollowUps();
+  renderHomeDashboard();
 
   try {
     const savedVisits = await cloudInsert("visits", {
@@ -1104,6 +1148,7 @@ document.getElementById("submitVisitButton").addEventListener("click", async () 
     saveState();
     renderHistory();
     renderFollowUps();
+    renderHomeDashboard();
     toast(uploadedPhotos.length ? "Visit and photos saved to cloud" : "Visit saved to cloud");
   } catch {
     toast("Visit saved locally");
@@ -1148,6 +1193,7 @@ document.getElementById("bookOrderButton").addEventListener("click", async () =>
   state.orders.push(order);
   saveState();
   renderHistory();
+  renderHomeDashboard();
 
   try {
     const savedOrder = await cloudInsert("orders", {
@@ -1173,6 +1219,7 @@ document.getElementById("bookOrderButton").addEventListener("click", async () =>
     orderCartItems = [];
     renderOrderItems();
     renderOrderTotal();
+    renderHomeDashboard();
     toast("Order booked to cloud");
   } catch {
     toast("Order saved locally");
