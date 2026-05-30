@@ -784,6 +784,112 @@ p {
   background: white;
 }
 
+.call-session-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+  gap: 12px;
+  align-items: center;
+  margin: -4px -16px 0;
+  padding: 18px 16px;
+  background: #eaf2ff;
+  border-bottom: 1px solid var(--line);
+}
+
+.call-session-hero h2 {
+  margin-bottom: 4px;
+  font-size: 1.35rem;
+}
+
+.call-session-hero p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.call-session-hero button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #0f1720;
+  color: white;
+  font-weight: 900;
+}
+
+.call-status-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 86px;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+
+.call-status-bar div {
+  display: grid;
+  gap: 3px;
+}
+
+.call-status-bar span,
+.location-line {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.call-status-bar strong {
+  font-size: 1rem;
+}
+
+.call-status-bar input {
+  min-height: 42px;
+  padding: 8px;
+}
+
+.location-line {
+  margin: -4px 0 0;
+}
+
+.call-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.call-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: white;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.call-tabs button:last-child {
+  border-right: 0;
+}
+
+.call-tabs button.active {
+  background: #064ab1;
+  color: white;
+}
+
+.call-tab-panel {
+  display: none;
+  gap: 12px;
+}
+
+.call-tab-panel.active {
+  display: grid;
+}
+
+.call-history {
+  box-shadow: none;
+}
+
 .compact {
   box-shadow: none;
 }

@@ -879,6 +879,10 @@ function money(value) {
   }).format(Number(value || 0));
 }
 
+function blank(value) {
+  return value === null || value === undefined ? "" : value;
+}
+
 function renderVisits() {
   const target = document.getElementById("visitRows");
   target.innerHTML = visits
@@ -908,12 +912,12 @@ function renderCloudVisits() {
             .map((visit) => {
               return `
                 <tr>
-                  <td><strong>${visit.customer || "-"}</strong></td>
-                  <td>${visit.user_name || "-"}</td>
+                  <td><strong>${blank(visit.customer)}</strong></td>
+                  <td>${blank(visit.user_name)}</td>
                   <td><span class="tag">${visit.role || "MR"}</span></td>
-                  <td>${visit.outcome || "-"}</td>
-                  <td>${visit.notes || "-"}</td>
-                  <td>${visit.visit_time || "-"}</td>
+                  <td>${blank(visit.outcome)}</td>
+                  <td>${blank(visit.notes)}</td>
+                  <td>${blank(visit.visit_time)}</td>
                 </tr>
               `;
             })
@@ -971,12 +975,12 @@ function renderAdminCustomers(customers) {
         .map((customer) => {
           return `
             <tr>
-              <td><strong>${customer.name || "-"}</strong></td>
-              <td>${customer.type || "-"}</td>
-              <td>${customer.area || "-"}</td>
-              <td>${customer.customerClass || customer.customer_class || "-"}</td>
-              <td>${customer.specialty || "-"}</td>
-              <td>${customer.mobile || "-"}</td>
+              <td><strong>${blank(customer.name)}</strong></td>
+              <td>${blank(customer.type)}</td>
+              <td>${blank(customer.area)}</td>
+              <td>${blank(customer.customerClass || customer.customer_class)}</td>
+              <td>${blank(customer.specialty)}</td>
+              <td>${blank(customer.mobile)}</td>
               <td>${money(customer.outstanding)}</td>
               <td>
                 <button class="table-action" data-edit-customer="${customer.id}">Edit</button>
@@ -1032,13 +1036,13 @@ function renderAdminProducts(products) {
         .map((product) => {
           return `
             <tr>
-              <td><strong>${product.name || "-"}</strong></td>
-              <td>${product.composition || "-"}</td>
-              <td>${product.category || "-"}</td>
-              <td>${product.pack || "-"}</td>
+              <td><strong>${blank(product.name)}</strong></td>
+              <td>${blank(product.composition)}</td>
+              <td>${blank(product.category)}</td>
+              <td>${blank(product.pack)}</td>
               <td>${money(product.mrp)}</td>
               <td>${money(product.saleRate || product.sale_rate)}</td>
-              <td>${product.scheme || "-"}</td>
+              <td>${blank(product.scheme)}</td>
               <td>${product.stock || 0}</td>
               <td>
                 <button class="table-action" data-edit-product="${product.id}">Edit</button>
@@ -1193,9 +1197,9 @@ function renderUsers(users = cachedUsers) {
           const statusLabel = user.status === "inactive" ? "Inactive" : "Active";
           return `
             <tr>
-              <td><button class="link-action" data-open-user="${user.id}" type="button">${user.full_name || "-"}</button></td>
-              <td>${user.email || "-"}</td>
-              <td><span class="tag">${user.role || "-"}</span></td>
+              <td><button class="link-action" data-open-user="${user.id}" type="button">${blank(user.full_name)}</button></td>
+              <td>${blank(user.email)}</td>
+              <td><span class="tag">${blank(user.role)}</span></td>
               <td><span class="tag ${user.status === "inactive" ? "danger-tag" : ""}">${statusLabel}</span></td>
               <td>
                 <button class="table-action" data-edit-user="${user.id}">Edit</button>
@@ -1368,7 +1372,7 @@ function renderCloudSales() {
                       <div class="master-list">
                         ${lines.map((item) => `
                           <div class="master-item">
-                            <strong>${item.product_name || "-"}</strong>
+                            <strong>${blank(item.product_name)}</strong>
                             <span>Qty ${item.quantity || 0} x ${money(item.rate)} = ${money(item.line_total)}</span>
                           </div>
                         `).join("")}
@@ -1379,11 +1383,11 @@ function renderCloudSales() {
                 : "";
               return `
                 <tr>
-                  <td><strong>${order.customer || "-"}</strong></td>
-                  <td>${order.user_name || "-"}</td>
-                  <td>${order.role || "-"}</td>
+                  <td><strong>${blank(order.customer)}</strong></td>
+                  <td>${blank(order.user_name)}</td>
+                  <td>${blank(order.role)}</td>
                   <td>${money(order.total)}</td>
-                  <td>${order.order_time || "-"}</td>
+                  <td>${blank(order.order_time)}</td>
                 </tr>
                 ${lineRows}
               `;
@@ -1477,11 +1481,11 @@ function renderTerritories() {
       rows.innerHTML = items.length
         ? items.map((item) => `
           <tr>
-            <td>${item.state || "-"}</td>
-            <td>${item.city || "-"}</td>
-            <td><strong>${item.area || "-"}</strong></td>
-            <td>${item.territory || "-"}</td>
-            <td>${item.assigned_manager || "-"}</td>
+            <td>${blank(item.state)}</td>
+            <td>${blank(item.city)}</td>
+            <td><strong>${blank(item.area)}</strong></td>
+            <td>${blank(item.territory)}</td>
+            <td>${blank(item.assigned_manager)}</td>
             <td><span class="tag">${item.status || "Active"}</span></td>
           </tr>
         `).join("")
@@ -1531,12 +1535,12 @@ function renderBeatPlans() {
             .map((plan) => {
               return `
                 <tr>
-                  <td>${plan.sequence_no || "-"}</td>
-                  <td><strong>${plan.title || "-"}</strong></td>
-                  <td>${plan.assigned_to || "-"}</td>
-                  <td>${plan.area || "-"}</td>
-                  <td>${plan.customer || "-"}</td>
-                  <td>${plan.planned_date || "-"}</td>
+                  <td>${blank(plan.sequence_no)}</td>
+                  <td><strong>${blank(plan.title)}</strong></td>
+                  <td>${blank(plan.assigned_to)}</td>
+                  <td>${blank(plan.area)}</td>
+                  <td>${blank(plan.customer)}</td>
+                  <td>${blank(plan.planned_date)}</td>
                   <td><span class="tag">${plan.status || "Planned"}</span></td>
                 </tr>
               `;
@@ -1599,10 +1603,10 @@ function renderTasks() {
             .map((task) => {
               return `
                 <tr>
-                  <td><strong>${task.title || "-"}</strong></td>
-                  <td>${task.assigned_to || "-"}</td>
-                  <td>${task.priority || "-"}</td>
-                  <td>${task.due_date || "-"}</td>
+                  <td><strong>${blank(task.title)}</strong></td>
+                  <td>${blank(task.assigned_to)}</td>
+                  <td>${blank(task.priority)}</td>
+                  <td>${blank(task.due_date)}</td>
                   <td><span class="tag">${task.status || "Open"}</span></td>
                 </tr>
               `;
@@ -1825,13 +1829,13 @@ function renderReports() {
               .slice(0, 30)
               .map((session) => `
                 <tr>
-                  <td>${session.user_name || "-"}</td>
-                  <td><strong>${session.customer || "-"}</strong><br><small>${session.area || "-"}</small></td>
-                  <td>${session.check_in_time || "-"}</td>
-                  <td>${session.check_out_time || "-"}</td>
+                  <td>${blank(session.user_name)}</td>
+                  <td><strong>${blank(session.customer)}</strong><br><small>${blank(session.area)}</small></td>
+                  <td>${blank(session.check_in_time)}</td>
+                  <td>${blank(session.check_out_time)}</td>
                   <td>${session.duration_minutes || 0} min</td>
                   <td>${Number(session.km_travelled || 0).toFixed(1)}</td>
-                  <td>${session.outcome || "-"}</td>
+                  <td>${blank(session.outcome)}</td>
                 </tr>
               `)
               .join("")

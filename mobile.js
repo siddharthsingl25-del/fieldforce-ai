@@ -58,6 +58,7 @@ let outletTimer = null;
 let selectedVisitPhotos = [];
 let outletFilter = "pending";
 let selectedOutletCustomer = null;
+let activeCallTab = "order";
 
 function cloudHeaders(extra = {}) {
   return {
@@ -576,8 +577,60 @@ function openOutletDetail(customerName) {
 
 async function startOutletCall(customerName) {
   selectCustomerForWork(customerName);
+  const started = await beginOutletSession(customerName);
+  if (!started) return;
   showMobileView("m-visit");
-  document.getElementById("startOutletButton")?.click();
+  setCallTab("order");
+}
+
+async function beginOutletSession(customerName) {
+  if (!state.checkedIn) {
+    toast("Pehle GPS attendance check-in karo");
+    return false;
+  }
+
+  let location;
+  try {
+    location = await getCurrentLocation();
+  } catch {
+    toast("Location permission is required to check in");
+    return false;
+  }
+
+  const customer = state.customers.find((item) => item.name === customerName);
+  selectedOutletCustomer = getBeatOutlets().find((item) => item.name === customerName) || customer || { name: customerName };
+  activeOutletSession = {
+    customer: customerName,
+    area: customer?.area || selectedOutletCustomer.area || "",
+    startedAt: new Date().toISOString(),
+    checkInTime: currentTime(),
+    checkInLatitude: location.latitude,
+    checkInLongitude: location.longitude
+  };
+
+  if (outletTimer) clearInterval(outletTimer);
+  outletTimer = setInterval(renderOutletStats, 30000);
+  renderOutletStats();
+  updateCallCollection();
+  const outletLocationStatus = document.getElementById("outletLocationStatus");
+  if (outletLocationStatus) outletLocationStatus.textContent = `check-in location captured ✓ ${formatLocation(location)}`;
+  toast("Call started");
+  return true;
+}
+
+function setCallTab(tab) {
+  activeCallTab = tab;
+  document.querySelectorAll("[data-call-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.callTab === activeCallTab);
+  });
+  document.querySelectorAll(".call-tab-panel").forEach((panel) => {
+    panel.classList.toggle("active", panel.id === `callTab${activeCallTab.charAt(0).toUpperCase()}${activeCallTab.slice(1)}`);
+  });
+}
+
+function updateCallCollection() {
+  const target = document.getElementById("callPendingCollection");
+  if (target) target.textContent = money(selectedOutletCustomer?.outstanding || 0);
 }
 
 function renderTasks(tasks = []) {
@@ -814,6 +867,10 @@ document.querySelectorAll("[data-outlet-filter]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-call-tab]").forEach((button) => {
+  button.addEventListener("click", () => setCallTab(button.dataset.callTab));
+});
+
 document.getElementById("backToOutletList")?.addEventListener("click", () => showMobileView("m-beat"));
 document.getElementById("detailStartCallButton")?.addEventListener("click", () => {
   const name = selectedOutletCustomer?.name || document.getElementById("outletDetailName")?.textContent;
@@ -821,11 +878,19 @@ document.getElementById("detailStartCallButton")?.addEventListener("click", () =
 });
 document.getElementById("orderOnPhoneButton")?.addEventListener("click", () => {
   const name = selectedOutletCustomer?.name || document.getElementById("outletDetailName")?.textContent;
-  if (name) selectCustomerForWork(name);
-  showMobileView("m-order");
+  if (name) startOutletCall(name);
 });
-document.getElementById("outletTransactionsButton")?.addEventListener("click", () => showMobileView("m-order"));
-document.getElementById("outletSchemesButton")?.addEventListener("click", () => showMobileView("m-order"));
+document.getElementById("outletTransactionsButton")?.addEventListener("click", () => {
+  const name = selectedOutletCustomer?.name || document.getElementById("outletDetailName")?.textContent;
+  if (name) startOutletCall(name);
+});
+document.getElementById("outletSchemesButton")?.addEventListener("click", async () => {
+  const name = selectedOutletCustomer?.name || document.getElementById("outletDetailName")?.textContent;
+  if (name) {
+    await startOutletCall(name);
+    setCallTab("schemes");
+  }
+});
 
 document.getElementById("loginButton").addEventListener("click", async () => {
   const status = document.getElementById("loginStatus");

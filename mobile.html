@@ -184,78 +184,82 @@
       </section>
 
       <section class="mobile-view" id="m-visit">
-        <section class="customer-card">
-          <span class="pill">Current Visit</span>
-          <h2 id="selectedVisitCustomerName">Select Customer</h2>
-          <p id="selectedVisitCustomerMeta">Choose customer from the dropdown before visit submission.</p>
-          <div class="visit-actions">
-            <button id="startOutletButton">Start Outlet Check-In</button>
-            <button id="checkoutOutletButton">Check Out Outlet</button>
-            <button>Voice Note</button>
-            <button>Upload Photo</button>
+        <section class="call-session-hero">
+          <div>
+            <span class="pill">Call Running</span>
+            <h2 id="selectedVisitCustomerName">Select Customer</h2>
+            <p id="selectedVisitCustomerMeta">Start call from outlet list.</p>
+          </div>
+          <button id="checkoutOutletButton" type="button">Check Out</button>
+        </section>
+        <section class="call-status-bar">
+          <div><span>Time at outlet</span><strong id="outletMinutes">0 min</strong></div>
+          <div><span>Today KM</span><strong id="outletKmTotal">0 km</strong></div>
+          <input id="outletKmInput" type="number" min="0" step="0.1" value="0" aria-label="KM from last outlet" />
+        </section>
+        <p class="location-line" id="outletLocationStatus">Outlet location not captured yet</p>
+        <section class="call-tabs">
+          <button class="active" data-call-tab="order" type="button">Order</button>
+          <button data-call-tab="report" type="button">Report</button>
+          <button data-call-tab="schemes" type="button">Schemes</button>
+          <button data-call-tab="collection" type="button">Collection</button>
+          <button data-call-tab="audit" type="button">Audit</button>
+        </section>
+        <section class="call-tab-panel active" id="callTabOrder">
+          <div class="mobile-panel">
+            <div class="panel-title">
+              <h2>Order Cart</h2>
+              <span id="orderItemCount">0 items</span>
+            </div>
+            <label>Customer<select id="orderCustomerSelect"></select></label>
+            <label>Product Search<input id="orderProductSearch" placeholder="Search product / composition..." /></label>
+            <div id="orderProductRows"></div>
+            <div class="panel-title order-line-title"><h2>Order Items</h2></div>
+            <div class="master-list" id="orderItemList"></div>
+          </div>
+          <section class="total-card">
+            <span>Total Order</span>
+            <strong id="orderTotal">₹0</strong>
+            <button class="submit-button" id="bookOrderButton">Book Order</button>
+          </section>
+        </section>
+        <section class="call-tab-panel" id="callTabReport">
+          <div class="mobile-panel">
+            <h2>Visit Report</h2>
+            <label>Customer<select id="visitCustomerSelect"></select></label>
+            <label>Outcome<select id="visitOutcome"><option>Productive Call</option><option>Non-Productive Call</option><option>Shop Closed</option></select></label>
+            <label>Notes<textarea id="visitNotes" placeholder="Add visit notes..."></textarea></label>
+            <label>Follow-up date<input id="visitFollowUpDate" type="date" /></label>
+            <label>Visit Photos<input id="visitPhotoInput" type="file" accept="image/*" multiple /></label>
+            <div class="photo-preview-grid" id="visitPhotoPreview"></div>
+            <p id="visitPhotoStatus">No photos attached</p>
+            <button class="submit-button" id="submitVisitButton">Submit Visit</button>
           </div>
         </section>
-
-        <section class="mobile-panel compact">
-          <div class="panel-title">
-            <h2>Outlet Timer</h2>
-            <span id="outletSessionStatus">No active outlet</span>
+        <section class="call-tab-panel" id="callTabSchemes">
+          <div class="mobile-panel">
+            <div class="panel-title"><h2>Active Schemes</h2><span id="mobileSchemeCount">0 active</span></div>
+            <div class="master-list" id="mobileSchemeList"></div>
           </div>
-          <div class="status-grid">
-            <div><span>Time at outlet</span><strong id="outletMinutes">0 min</strong></div>
-            <div><span>Today KM</span><strong id="outletKmTotal">0 km</strong></div>
+        </section>
+        <section class="call-tab-panel" id="callTabCollection">
+          <div class="collection-card">
+            <span>Pending Collection</span>
+            <strong id="callPendingCollection">₹0</strong>
+            <button type="button">Collect</button>
           </div>
-          <label>
-            KM from last outlet
-            <input id="outletKmInput" type="number" min="0" step="0.1" value="0" />
-          </label>
-          <p id="outletLocationStatus">Outlet location not captured yet</p>
         </section>
-
-        <section class="mobile-panel">
-          <h2>Visit Report</h2>
-          <label>
-            Customer
-            <select id="visitCustomerSelect"></select>
-          </label>
-          <label>
-            Outcome
-            <select id="visitOutcome">
-              <option>Productive Call</option>
-              <option>Non-Productive Call</option>
-              <option>Shop Closed</option>
-            </select>
-          </label>
-          <label>
-            Notes
-            <textarea id="visitNotes" placeholder="Add visit notes...">Discussed VitaPlus combo scheme and refill requirement.</textarea>
-          </label>
-          <label>
-            Follow-up date
-            <input id="visitFollowUpDate" type="date" />
-          </label>
-          <label>
-            Visit Photos
-            <input id="visitPhotoInput" type="file" accept="image/*" multiple />
-          </label>
-          <div class="photo-preview-grid" id="visitPhotoPreview"></div>
-          <p id="visitPhotoStatus">No photos attached</p>
-          <button class="submit-button" id="submitVisitButton">Submit Visit</button>
-        </section>
-
-        <section class="mobile-panel">
-          <div class="panel-title">
-            <h2>Retail Audit</h2>
-            <span>FMCG</span>
+        <section class="call-tab-panel" id="callTabAudit">
+          <div class="mobile-panel">
+            <div class="panel-title"><h2>Retail Audit</h2><span>FMCG</span></div>
+            <label>Shelf Share %<input id="retailShelfShare" type="number" min="0" max="100" value="0" /></label>
+            <label>Competitor Brand<input id="retailCompetitor" placeholder="Competitor / market intelligence" /></label>
+            <label>Stock Status<select id="retailStockStatus"><option>Available</option><option>Low Stock</option><option>Stockout</option><option>Overstock</option></select></label>
+            <label>Merchandising Notes<textarea id="retailAuditNotes" placeholder="Shelf display, photo note, competitor activity..."></textarea></label>
+            <button class="submit-button" id="submitRetailAuditButton">Submit Retail Audit</button>
           </div>
-          <label>Shelf Share %<input id="retailShelfShare" type="number" min="0" max="100" value="0" /></label>
-          <label>Competitor Brand<input id="retailCompetitor" placeholder="Competitor / market intelligence" /></label>
-          <label>Stock Status<select id="retailStockStatus"><option>Available</option><option>Low Stock</option><option>Stockout</option><option>Overstock</option></select></label>
-          <label>Merchandising Notes<textarea id="retailAuditNotes" placeholder="Shelf display, photo note, competitor activity..."></textarea></label>
-          <button class="submit-button" id="submitRetailAuditButton">Submit Retail Audit</button>
         </section>
-
-        <section class="mobile-panel">
+        <section class="mobile-panel call-history">
           <div class="panel-title">
             <h2>Today History</h2>
             <span id="historyCount">0 saved</span>
@@ -267,35 +271,10 @@
       <section class="mobile-view" id="m-order">
         <section class="mobile-panel">
           <div class="panel-title">
-            <h2>Active Schemes</h2>
-            <span id="mobileSchemeCount">0 active</span>
+            <h2>Order starts inside call</h2>
           </div>
-          <div class="master-list" id="mobileSchemeList"></div>
-        </section>
-        <section class="mobile-panel">
-          <div class="panel-title">
-            <h2>Order Cart</h2>
-            <span>Scheme applied</span>
-          </div>
-          <label>
-            Customer
-            <select id="orderCustomerSelect"></select>
-          </label>
-          <label>
-            Product Search
-            <input id="orderProductSearch" placeholder="Search product / composition..." />
-          </label>
-          <div id="orderProductRows"></div>
-          <div class="panel-title order-line-title">
-            <h2>Order Items</h2>
-            <span id="orderItemCount">0 items</span>
-          </div>
-          <div class="master-list" id="orderItemList"></div>
-        </section>
-        <section class="total-card">
-          <span>Total Order</span>
-          <strong id="orderTotal">₹5,712</strong>
-          <button class="submit-button" id="bookOrderButton">Book Order</button>
+          <p>Outlet list se Start Call tap karo. Order tab call ke andar open hoga.</p>
+          <button class="submit-button" data-jump-view="m-beat" type="button">Go to Outlets</button>
         </section>
       </section>
 
